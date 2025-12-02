@@ -1,17 +1,17 @@
-import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 
-import { authOptions } from "@/lib/auth/auth-options";
+import { getAppSession } from "@/lib/api/session-service";
 import { calendarHelpers } from "@/lib/actions/calendar-helpers";
+import { handleApiError, ApiError } from "@/lib/api/error-handler";
 
 export async function GET() {
-  const session = await getServerSession(authOptions);
-
-  if (!session?.user?.id) {
-    return new NextResponse("Unauthorized", { status: 401 });
-  }
-
   try {
+    const session = await getAppSession();
+
+    if (!session?.user?.id) {
+      throw new ApiError(401, "Non authentifié", "UNAUTHORIZED");
+    }
+
     // Récupérer les événements pour les 3 prochains mois
     const startDate = new Date();
     const endDate = new Date();
@@ -23,9 +23,8 @@ export async function GET() {
     });
 
     return NextResponse.json({ events });
-  } catch (error) {
-    console.error("Error fetching calendar events:", error);
-    return NextResponse.json({ error: "Failed to fetch events" }, { status: 500 });
+  } catch (error: unknown) {
+    return handleApiError(error, "calendar/events");
   }
 }
 

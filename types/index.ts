@@ -47,3 +47,18 @@ export interface ConflictInfo {
   hasConflict: boolean;
   conflictingEvents?: CalendarEvent[];
 }
+
+export type Theme = 'light' | 'dark' | 'system';
+
+export type AccentColor = string;
+
+/**
+ * Interface pour une règle automatique
+ */
+export interface Rule {
+  id: string;
+  name: string;
+  description: string;
+  enabled: boolean;
+  createdAt: Date;
+}

@@ -1,6 +1,9 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { ThemeManager } from '@/lib/theme/theme-manager';
+import { AccentColorManager } from '@/lib/theme/accent-color-manager';
+import { logger } from '@/lib/utils/logger';
 
 export interface UserSettings {
   // Notifications
@@ -10,7 +13,7 @@ export interface UserSettings {
   reminderTime: number;
 
   // Appearance
-  theme: 'light' | 'dark' | 'auto';
+  theme: 'light' | 'dark' | 'system';
   accentColor: string;
   language: string;
 
@@ -32,7 +35,7 @@ const defaultSettings: UserSettings = {
   pushNotifications: true,
   eventReminders: true,
   reminderTime: 15,
-  theme: 'light',
+  theme: 'system',
   accentColor: '#2383e2',
   language: 'fr',
   weekStartsOn: 1,
@@ -61,93 +64,42 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     if (savedSettings) {
       try {
         const parsed = JSON.parse(savedSettings);
+        // Migration : 'auto' -> 'system'
+        if (parsed.theme === 'auto') {
+          parsed.theme = 'system';
+        }
         setSettings(prev => ({ ...prev, ...parsed }));
       } catch (e) {
-        console.error('Failed to parse settings:', e);
+        logger.error('Failed to parse settings:', e);
       }
     }
     setIsLoaded(true);
   }, []);
 
-  // Helper function to apply accent color CSS variables
-  const applyAccentColor = (color: string) => {
-    // Set the hex value for inline styles
-    document.documentElement.style.setProperty('--accent-color', color);
-
-    // Calculate RGB values for Tailwind
-    const hex = color.replace('#', '');
-    const r = parseInt(hex.substring(0, 2), 16);
-    const g = parseInt(hex.substring(2, 4), 16);
-    const b = parseInt(hex.substring(4, 6), 16);
-
-    // Set RGB values (space-separated for Tailwind 3 opacity modifier support)
-    document.documentElement.style.setProperty('--accent-color-rgb', `${r} ${g} ${b}`);
-
-    // Set light version for backgrounds
-    document.documentElement.style.setProperty(
-      '--accent-color-light',
-      `rgba(${r}, ${g}, ${b}, 0.1)`
-    );
-  };
-
   // Apply accent color as CSS variable
   useEffect(() => {
-    applyAccentColor(settings.accentColor);
-  }, [settings.accentColor]);
+    if (isLoaded) {
+      const effectiveTheme = settings.theme === 'system' 
+        ? ThemeManager.getSystemTheme() 
+        : settings.theme;
+      AccentColorManager.applyAccentColor(settings.accentColor, effectiveTheme);
+    }
+  }, [settings.accentColor, settings.theme, isLoaded]);
 
   // Apply theme
   useEffect(() => {
     if (isLoaded) {
-      const root = document.documentElement;
+      ThemeManager.applyTheme(settings.theme);
 
-      const applyTheme = (isDark: boolean) => {
-        if (isDark) {
-          root.classList.add('dark');
-        } else {
-          root.classList.remove('dark');
-        }
-      };
-
-      if (settings.theme === 'dark') {
-        applyTheme(true);
-      } else if (settings.theme === 'light') {
-        applyTheme(false);
-      } else {
-        // Auto: follow system preference
-        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-        applyTheme(mediaQuery.matches);
-
-        // Listen for system preference changes
-        const handleChange = (e: MediaQueryListEvent) => {
-          if (settings.theme === 'auto') {
-            applyTheme(e.matches);
-          }
-        };
-
-        mediaQuery.addEventListener('change', handleChange);
-        return () => mediaQuery.removeEventListener('change', handleChange);
+      // Si le thème est 'system', écouter les changements système
+      if (settings.theme === 'system') {
+        const cleanup = ThemeManager.watchSystemTheme(() => {
+          ThemeManager.applyTheme('system');
+        });
+        return cleanup;
       }
     }
   }, [settings.theme, isLoaded]);
-
-  // Helper function to apply theme
-  const applyThemeDirectly = (theme: 'light' | 'dark' | 'auto') => {
-    const root = document.documentElement;
-
-    if (theme === 'dark') {
-      root.classList.add('dark');
-    } else if (theme === 'light') {
-      root.classList.remove('dark');
-    } else {
-      // Auto: follow system preference
-      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      if (mediaQuery.matches) {
-        root.classList.add('dark');
-      } else {
-        root.classList.remove('dark');
-      }
-    }
-  };
 
   const updateSetting = <K extends keyof UserSettings>(key: K, value: UserSettings[K]) => {
     setSettings(prev => {
@@ -156,12 +108,15 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
 
       // Apply accent color immediately when it changes
       if (key === 'accentColor' && typeof value === 'string') {
-        applyAccentColor(value);
+        const effectiveTheme = prev.theme === 'system' 
+          ? ThemeManager.getSystemTheme() 
+          : prev.theme;
+        AccentColorManager.applyAccentColor(value, effectiveTheme);
       }
 
       // Apply theme immediately when it changes
-      if (key === 'theme' && (value === 'light' || value === 'dark' || value === 'auto')) {
-        applyThemeDirectly(value);
+      if (key === 'theme' && (value === 'light' || value === 'dark' || value === 'system')) {
+        ThemeManager.applyTheme(value);
       }
 
       return newSettings;

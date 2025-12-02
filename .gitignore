@@ -16,3 +16,9 @@ dist/
 build/
 .vercel/
 *.log
+
+# Local Prisma databases (ne pas committer)
+prisma/dev.db
+prisma/test.db
+prisma/backups/
+prisma/prisma/dev.db

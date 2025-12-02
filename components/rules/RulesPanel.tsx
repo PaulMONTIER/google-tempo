@@ -2,14 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { X, Plus, Trash, Play, Pause, Zap } from '@/components/icons';
-
-interface Rule {
-  id: string;
-  name: string;
-  description: string;
-  enabled: boolean;
-  createdAt: Date;
-}
+import type { Rule } from '@/types';
+import { Z_INDEX, DURATIONS } from '@/lib/constants/ui-constants';
 
 interface RulesPanelProps {
   isOpen: boolean;
@@ -42,7 +36,7 @@ export function RulesPanel({ isOpen, onClose }: RulesPanelProps) {
 
   const handleClose = () => {
     setIsVisible(false);
-    setTimeout(onClose, 300);
+    setTimeout(onClose, DURATIONS.animation);
   };
 
   const saveRules = (updatedRules: Rule[]) => {
@@ -81,14 +75,17 @@ export function RulesPanel({ isOpen, onClose }: RulesPanelProps) {
     <>
       {/* Backdrop */}
       <div
-        className={`fixed inset-0 bg-black/50 z-[60] transition-opacity duration-300 ${
-          isVisible ? 'opacity-100' : 'opacity-0'
-        }`}
+        className={`fixed inset-0 bg-black/50 transition-opacity`}
+        style={{ 
+          zIndex: Z_INDEX.modalOverlay,
+          transitionDuration: `${DURATIONS.animation}ms`,
+          opacity: isVisible ? 1 : 0
+        }}
         onClick={handleClose}
       />
 
       {/* Centered Modal */}
-      <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 pointer-events-none">
+      <div className="fixed inset-0 flex items-center justify-center p-4 pointer-events-none" style={{ zIndex: Z_INDEX.modal }}>
         <div
           className={`w-full max-w-2xl max-h-[85vh] bg-notion-bg rounded-xl shadow-2xl pointer-events-auto transition-all duration-300 ease-out flex flex-col ${
             isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'

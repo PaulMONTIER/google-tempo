@@ -16,6 +16,9 @@ import {
 } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useState, useEffect } from 'react';
+import { formatTime, formatHourLabel } from '@/lib/utils/time-formatters';
+import { CALENDAR, DURATIONS, Z_INDEX } from '@/lib/constants/ui-constants';
+import { calendarLayoutStyles, currentTimeIndicatorStyles, getEventColorStyles } from '@/lib/utils/style-helpers';
 
 interface WeekViewProps {
   currentDate: Date;
@@ -38,29 +41,11 @@ export function WeekView({
   const hours = Array.from({ length: 24 }, (_, i) => i);
   const [currentTime, setCurrentTime] = useState(new Date());
 
-  // Format time based on settings
-  const formatTime = (date: Date) => {
-    if (timeFormat === '12h') {
-      return format(date, 'h:mm a');
-    }
-    return format(date, 'HH:mm');
-  };
-
-  // Format hour label
-  const formatHourLabel = (hour: number) => {
-    if (timeFormat === '12h') {
-      const period = hour >= 12 ? 'PM' : 'AM';
-      const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
-      return `${displayHour} ${period}`;
-    }
-    return `${hour.toString().padStart(2, '0')}:00`;
-  };
-
   // Update current time every minute
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentTime(new Date());
-    }, 60000); // Update every minute
+    }, DURATIONS.oneMinute);
     return () => clearInterval(interval);
   }, []);
 
@@ -76,12 +61,12 @@ export function WeekView({
   const isCurrentWeek = days.some(day => isToday(day));
   const currentHour = currentTime.getHours();
   const currentMinutes = currentTime.getMinutes();
-  const currentTimePosition = (currentHour * 60) + (currentMinutes / 60 * 60); // 60px per hour
+  const currentTimePosition = (currentHour * CALENDAR.hourLineHeight) + (currentMinutes / 60 * CALENDAR.hourLineHeight);
 
   return (
-    <div className="flex flex-col p-6" style={{height: '100%', maxHeight: '100%', overflow: 'hidden'}}>
+    <div className="flex flex-col p-6" style={calendarLayoutStyles.container}>
       {/* Header with days */}
-      <div className="bg-notion-bg border-b border-notion-border" style={{flexShrink: 0}}>
+      <div className="bg-notion-bg border-b border-notion-border" style={calendarLayoutStyles.header}>
         <div className="grid grid-cols-8 gap-px bg-notion-border">
           <div className="bg-notion-sidebar p-3"></div>
           {days.map((day) => {
@@ -110,11 +95,11 @@ export function WeekView({
       </div>
 
       {/* Time grid */}
-      <div style={{flex: 1, minHeight: 0, maxHeight: '100%', overflow: 'hidden', overflowY: 'auto', position: 'relative'}}>
+      <div style={calendarLayoutStyles.scrollable}>
         {hours.map((hour) => (
-          <div key={hour} className="grid grid-cols-8 gap-px bg-notion-border h-[60px]">
+          <div key={hour} className="grid grid-cols-8 gap-px bg-notion-border" style={{ height: `${CALENDAR.hourLineHeight}px` }}>
             <div className="bg-notion-sidebar p-2 text-xs text-notion-textLight text-right pr-3">
-              {formatHourLabel(hour)}
+              {formatHourLabel(hour, timeFormat === '24h')}
             </div>
             {days.map((day) => {
               const hourEvents = getEventsForDayAndHour(day, hour);
@@ -125,11 +110,11 @@ export function WeekView({
                       key={event.id}
                       onClick={() => onEventClick?.(event)}
                       className="text-xs p-1 rounded mb-1 cursor-pointer hover:shadow-sm transition-shadow overflow-hidden"
-                      style={{ backgroundColor: event.color + '20', color: event.color }}
+                      style={getEventColorStyles(event.color || '#2383e2')}
                     >
                       <div className="font-medium truncate">{event.title}</div>
                       <div className="text-xs opacity-80 truncate">
-                        {formatTime(new Date(event.startDate))} - {formatTime(new Date(event.endDate))}
+                        {formatTime(new Date(event.startDate), timeFormat === '24h')} - {formatTime(new Date(event.endDate), timeFormat === '24h')}
                       </div>
                     </div>
                   ))}
@@ -142,28 +127,9 @@ export function WeekView({
         {/* Current time indicator line */}
         {isCurrentWeek && (
           <div
-            style={{
-              position: 'absolute',
-              top: `${currentTimePosition}px`,
-              left: 0,
-              right: 0,
-              height: '2px',
-              backgroundColor: '#e74c3c',
-              zIndex: 10,
-              pointerEvents: 'none'
-            }}
+            style={{ ...currentTimeIndicatorStyles.line, top: `${currentTimePosition}px` }}
           >
-            <div
-              style={{
-                position: 'absolute',
-                left: '-6px',
-                top: '-5px',
-                width: '12px',
-                height: '12px',
-                borderRadius: '50%',
-                backgroundColor: '#e74c3c'
-              }}
-            />
+            <div style={currentTimeIndicatorStyles.dot} />
           </div>
         )}
       </div>

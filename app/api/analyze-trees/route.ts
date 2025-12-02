@@ -1,23 +1,26 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth/auth-options";
-import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
+import { getAppSession } from "@/lib/api/session-service";
+import { createGeminiModel } from "@/lib/ai/model-factory";
+import { formatDateForLLM } from "@/lib/utils/date-formatters";
+import { logger } from "@/lib/utils/logger";
+import { handleApiError, ApiError } from "@/lib/api/error-handler";
 
-const model = new ChatGoogleGenerativeAI({
-  modelName: "gemini-2.5-flash",
-  temperature: 0,
-  apiKey: process.env.GOOGLE_API_KEY,
-});
+// Initialisation lazy pour éviter les problèmes au build
+let _model: ReturnType<typeof createGeminiModel> | null = null;
+
+function getModel() {
+  if (!_model) {
+    _model = createGeminiModel();
+  }
+  return _model;
+}
 
 export async function POST(request: Request) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getAppSession();
 
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "Non authentifié" },
-        { status: 401 }
-      );
+      throw new ApiError(401, "Non authentifié", "UNAUTHORIZED");
     }
 
     const { events } = await request.json();
@@ -29,11 +32,7 @@ export async function POST(request: Request) {
     // Format events for the LLM
     const eventsText = events.map((e: any) => {
       const startDate = new Date(e.start);
-      return `- "${e.title}" le ${startDate.toLocaleDateString('fr-FR', {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'long'
-      })} (id: ${e.id})`;
+      return `- "${e.title}" le ${formatDateForLLM(startDate)} (id: ${e.id})`;
     }).join('\n');
 
     const prompt = `Analyse ces événements de calendrier et identifie les "arbres de préparation".
@@ -63,7 +62,7 @@ Règles :
 - Si aucun arbre n'est détecté, renvoie {"trees": []}
 - Renvoie UNIQUEMENT le JSON, pas de texte autour`;
 
-    const response = await model.invoke(prompt);
+    const response = await getModel().invoke(prompt);
 
     // Parse the response
     let content = response.content as string;
@@ -75,15 +74,13 @@ Règles :
       const parsed = JSON.parse(content);
       return NextResponse.json(parsed);
     } catch (parseError) {
-      console.error("[analyze-trees] Failed to parse LLM response:", content);
+      logger.error("[analyze-trees] Failed to parse LLM response:", content);
+      // Retourner un tableau vide plutôt qu'une erreur pour ce cas spécifique
       return NextResponse.json({ trees: [] });
     }
 
-  } catch (error: any) {
-    console.error("[analyze-trees] Error:", error);
-    return NextResponse.json(
-      { error: error.message || "Erreur d'analyse" },
-      { status: 500 }
-    );
+  } catch (error: unknown) {
+    logger.error("[analyze-trees] Error:", error);
+    return handleApiError(error, "analyze-trees");
   }
 }

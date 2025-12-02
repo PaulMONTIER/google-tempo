@@ -10,35 +10,41 @@ datasource db {
 }
 
 model User {
-  id                 String    @id @default(cuid())
-  name               String?
-  email              String?   @unique
-  emailVerified      DateTime?
-  image              String?
-  accounts           Account[]
-  sessions           Session[]
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
 
   googleAccessToken  String?
   googleRefreshToken String?
   googleTokenExpiry  DateTime?
 
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
+  // Relations gamification
+  userProgress     UserProgress?
+  conversations    Conversation[]
+  preparationTrees PreparationTree[]
+  agentMemories    AgentMemory[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Account {
-  id                 String   @id @default(cuid())
-  userId             String
-  type               String
-  provider           String
-  providerAccountId  String
-  refresh_token      String?
-  access_token       String?
-  expires_at         Int?
-  token_type         String?
-  scope              String?
-  id_token           String?
-  session_state      String?
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -62,4 +68,367 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+// ============================================
+// GAMIFICATION & PROGRESSION
+// ============================================
+
+model UserProgress {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // XP & Niveaux
+  xp    Int @default(0)
+  level Int @default(1)
+
+  // Streaks événementiels
+  currentStreak           Int       @default(0)
+  longestStreak           Int       @default(0)
+  lastEventValidationDate DateTime?
+
+  // Stats globales
+  totalActions          Int @default(0)
+  totalTasksCreated     Int @default(0)
+  totalTasksCompleted   Int @default(0)
+  totalQuizzesCompleted Int @default(0)
+
+  // Relations
+  skillProgress   UserSkillProgress[]
+  taskValidations TaskValidation[]
+  quizzes         Quiz[]
+  xpHistory       XpHistory[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([level])
+}
+
+model XpHistory {
+  id             String       @id @default(cuid())
+  userProgressId String
+  userProgress   UserProgress @relation(fields: [userProgressId], references: [id], onDelete: Cascade)
+
+  amount     Int // XP gagné
+  actionType String // 'task_created', 'task_completed', 'quiz_completed'
+  eventId    String? // ID de l'événement Google Calendar associé
+  multiplier Float   @default(1.0) // Multiplicateur (ex: 1.5 pour questionnaire)
+
+  createdAt DateTime @default(now())
+
+  @@index([userProgressId])
+  @@index([createdAt])
+  @@index([userProgressId, createdAt]) // Index composite pour requêtes fréquentes
+}
+
+// ============================================
+// COMPÉTENCES (Structure modifiable)
+// ============================================
+
+model SkillFamily {
+  id         String  @id @default(cuid())
+  name       String  @unique
+  color      String // Couleur hex pour le radar chart
+  icon       String? // Nom de l'icône (lucide-react)
+  order      Int // Ordre d'affichage
+  isActive   Boolean @default(true)
+  autoDetect Boolean @default(true) // Détection automatique depuis événements
+  keywords   String // JSON array: ["math", "sciences", ...]
+
+  details  SkillDetail[]
+  progress UserSkillProgress[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive])
+  @@index([order])
+}
+
+model SkillDetail {
+  id       String      @id @default(cuid())
+  familyId String
+  family   SkillFamily @relation(fields: [familyId], references: [id], onDelete: Cascade)
+
+  name        String
+  keywords    String // JSON array pour association automatique
+  description String?
+
+  progress   UserSkillProgress[]
+  activities Activity[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([familyId])
+}
+
+model UserSkillProgress {
+  id           String        @id @default(cuid())
+  userId       String
+  userProgress UserProgress? @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  skillFamilyId String
+  skillFamily   SkillFamily @relation(fields: [skillFamilyId], references: [id], onDelete: Cascade)
+
+  skillDetailId String?
+  skillDetail   SkillDetail? @relation(fields: [skillDetailId], references: [id], onDelete: Cascade)
+
+  level Int @default(0) // 0-100 pour le radar chart
+  xp    Int @default(0) // XP spécifique à cette compétence
+
+  lastActivityAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, skillFamilyId, skillDetailId])
+  @@index([userId])
+  @@index([skillFamilyId])
+}
+
+model Activity {
+  id            String      @id @default(cuid())
+  skillDetailId String
+  skillDetail   SkillDetail @relation(fields: [skillDetailId], references: [id], onDelete: Cascade)
+
+  eventId  String? // ID de l'événement Google Calendar
+  type     String // 'task_created', 'task_completed', 'quiz_completed'
+  xpEarned Int     @default(0)
+
+  taskValidationId String?         @unique
+  taskValidation   TaskValidation? @relation(fields: [taskValidationId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([skillDetailId])
+  @@index([eventId])
+  @@index([createdAt])
+}
+
+// ============================================
+// VALIDATION DE TÂCHES
+// ============================================
+
+model TaskValidation {
+  id           String        @id @default(cuid())
+  userId       String
+  userProgress UserProgress? @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  eventId    String   @unique // ID de l'événement Google Calendar
+  eventTitle String
+  eventDate  DateTime
+
+  completed   Boolean   @default(false)
+  validatedAt DateTime?
+
+  activity Activity?
+
+  // Données de validation
+  notes       String? // Notes optionnelles de l'utilisateur
+  dismissed   Boolean   @default(false)
+  dismissedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([eventId])
+  @@index([completed])
+  @@index([eventDate])
+  @@index([userId, eventDate]) // Index composite pour filtres fréquents
+}
+
+// ============================================
+// QUESTIONNAIRES IA
+// ============================================
+
+model QuizSeries {
+  id     String @id @default(cuid())
+  userId String
+
+  name         String // Ex: "Révision Mathématiques - Série 1/4"
+  totalQuizzes Int    @default(4)
+  currentQuiz  Int    @default(1) // 1, 2, 3, 4
+
+  goalEventId String? // Événement objectif associé
+  context     String? // Contexte JSON pour l'agent IA
+
+  quizzes Quiz[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([goalEventId])
+}
+
+model Quiz {
+  id           String        @id @default(cuid())
+  userId       String
+  userProgress UserProgress? @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  seriesId String?
+  series   QuizSeries? @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+
+  eventId    String // Événement associé
+  eventTitle String
+
+  // Résultats
+  score          Int     @default(0) // Score sur 10
+  totalQuestions Int     @default(10)
+  completed      Boolean @default(false)
+
+  // Données du questionnaire (générées par l'agent IA)
+  questions QuizQuestion[]
+  context   String? // JSON: contexte utilisé pour générer le quiz
+
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([userId])
+  @@index([eventId])
+  @@index([seriesId])
+  @@index([completed])
+}
+
+model QuizQuestion {
+  id     String @id @default(cuid())
+  quizId String
+  quiz   Quiz   @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  order         Int // Ordre dans le questionnaire (1-10)
+  question      String
+  options       String // JSON array: ["option1", "option2", ...]
+  correctAnswer Int // Index de la bonne réponse (0-based)
+
+  userAnswer Int? // Réponse de l'utilisateur
+  isCorrect  Boolean? // null si pas encore répondu
+  answeredAt DateTime?
+
+  explanation String? // Explication après correction
+
+  createdAt DateTime @default(now())
+
+  @@index([quizId])
+  @@index([order])
+}
+
+// ============================================
+// HISTORIQUE DE CONVERSATIONS
+// ============================================
+
+model Conversation {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title      String? // Titre généré automatiquement (première question)
+  isArchived Boolean @default(false)
+
+  messages ConversationMessage[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([isArchived])
+  @@index([updatedAt])
+}
+
+model ConversationMessage {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  role    String // 'user' | 'assistant' | 'system'
+  content String
+
+  // Métadonnées
+  toolCalls String? // JSON: appels d'outils si assistant
+  action    String? // Action détectée (ex: 'create_event')
+  metadata  String? // JSON: métadonnées additionnelles
+
+  createdAt DateTime @default(now())
+
+  @@index([conversationId])
+  @@index([createdAt])
+}
+
+// ============================================
+// ARBRES DE PRÉPARATION (Persistance)
+// ============================================
+
+model PreparationTree {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  treeId      String // ID unique de l'arbre (ex: "examen-math")
+  goalEventId String   @unique // ID de l'événement objectif (Google Calendar)
+  goalTitle   String
+  goalDate    DateTime
+
+  // Source de détection
+  detectionMethod String // 'annotation' | 'ai' | 'manual'
+
+  branches PreparationBranch[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, treeId])
+  @@index([userId])
+  @@index([goalEventId])
+  @@index([goalDate])
+}
+
+model PreparationBranch {
+  id     String          @id @default(cuid())
+  treeId String
+  tree   PreparationTree @relation(fields: [treeId], references: [id], onDelete: Cascade)
+
+  branchEventId String   @unique // ID de l'événement branche (Google Calendar)
+  branchTitle   String
+  branchDate    DateTime
+
+  order Int // Ordre chronologique
+
+  createdAt DateTime @default(now())
+
+  @@index([treeId])
+  @@index([branchEventId])
+  @@index([branchDate])
+}
+
+// ============================================
+// MÉMOIRE CONTEXTUELLE POUR L'AGENT IA
+// ============================================
+
+model AgentMemory {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Type de mémoire
+  memoryType String // 'quiz_context', 'task_pattern', 'preference', etc.
+
+  // Données
+  key     String // Clé unique pour ce type de mémoire
+  value   String // JSON: valeur de la mémoire
+  context String? // JSON: contexte additionnel
+
+  // Expiration
+  expiresAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, memoryType, key])
+  @@index([userId])
+  @@index([memoryType])
+  @@index([expiresAt])
 }

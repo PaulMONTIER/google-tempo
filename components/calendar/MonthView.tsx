@@ -14,6 +14,7 @@ import {
   getWeek
 } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { formatTime } from '@/lib/utils/time-formatters';
 
 interface MonthViewProps {
   currentDate: Date;
@@ -45,14 +46,6 @@ export function MonthView({
   const dayNames = weekStartsOn === 1
     ? ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
     : ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
-
-  // Format time based on settings
-  const formatTime = (date: Date) => {
-    if (timeFormat === '12h') {
-      return format(date, 'h:mm a');
-    }
-    return format(date, 'HH:mm');
-  };
 
   // Get week numbers for display
   const weeks: Date[][] = [];
@@ -147,7 +140,7 @@ export function MonthView({
                         className="text-xs p-1 rounded truncate hover:shadow-sm transition-shadow cursor-pointer overflow-hidden"
                         style={{ backgroundColor: event.color + '20', color: event.color }}
                       >
-                        {formatTime(new Date(event.startDate))} {event.title}
+                        {formatTime(new Date(event.startDate), timeFormat === '24h')} {event.title}
                       </div>
                     ))}
                     {dayEvents.length > 3 && (
