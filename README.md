@@ -62,7 +62,7 @@ npm install
 3. Type : **Web application**
 4. **Authorized redirect URIs** :
    ```
-   http://localhost:3002/api/auth/callback/google
+   http://localhost:3000/api/auth/callback/google
    https://votre-domaine.com/api/auth/callback/google
    ```
 5. Téléchargez le fichier JSON (ne PAS le commiter !)
@@ -77,7 +77,7 @@ Créez un fichier `.env.local` à la racine :
 
 ```bash
 # NextAuth
-NEXTAUTH_URL=http://localhost:3002
+NEXTAUTH_URL=http://localhost:3000
 NEXTAUTH_SECRET=<générez avec: openssl rand -base64 32>
 
 # Google OAuth (depuis le JSON téléchargé)
@@ -110,7 +110,7 @@ npx prisma studio
 npm run dev
 ```
 
-Ouvrez [http://localhost:3002](http://localhost:3002)
+Ouvrez [http://localhost:3000](http://localhost:3000)
 
 ---
 
@@ -239,7 +239,7 @@ google-tempo/
 
 ```bash
 # Développement
-npm run dev               # Lancer le serveur (port 3002)
+npm run dev               # Lancer le serveur (port 3000)
 
 # Build & Production
 npm run build            # Build pour production

@@ -327,3 +327,39 @@ export function Target({ className }: { className?: string }) {
     </svg>
   );
 }
+
+export function Check({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+    </svg>
+  );
+}
+
+export function Edit3({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+    </svg>
+  );
+}
+
+export function Users({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+    </svg>
+  );
+}
+
+export function TreeDeciduous({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 22v-6m0-6V6" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10c-3.5 0-6-2-6-4.5S8.5 2 12 2s6 1.5 6 3.5-2.5 4.5-6 4.5z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16c-2 0-4-1.5-4-3.5S5 9 7 9c.5 0 1 .1 1.5.2" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16c2 0 4-1.5 4-3.5S19 9 17 9c-.5 0-1 .1-1.5.2" />
+    </svg>
+  );
+}
+

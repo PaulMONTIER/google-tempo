@@ -6,6 +6,7 @@ import { cleanMarkdown } from "@/lib/api/cleaners/markdown-cleaner";
 import { detectActionFromMessages } from "@/lib/api/analyzers/action-detector";
 import { logger } from "@/lib/utils/logger";
 import { handleApiError } from "@/lib/api/error-handler";
+import { Rule } from "@/types";
 
 export async function POST(req: NextRequest) {
   const startTime = Date.now();
@@ -23,7 +24,7 @@ export async function POST(req: NextRequest) {
 
     // Validation du body
     const body = await req.json();
-    const { messages } = body;
+    const { messages, requireConfirmation = true, rules = [] } = body;
 
     if (!messages || !Array.isArray(messages)) {
       return NextResponse.json(
@@ -35,7 +36,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    logger.debug(`[API /chat] Starting agent for userId: ${userId}`);
+    // 🆕 Filtrer les règles actives
+    const activeRules: Rule[] = Array.isArray(rules)
+      ? rules.filter((r: Rule) => r.enabled)
+      : [];
+
+    logger.debug(`[API /chat] Starting agent for userId: ${userId}, requireConfirmation: ${requireConfirmation}, rules: ${activeRules.length}`);
 
     // Transformation des messages
     const formattedMessages = transformMessagesToLangChain(messages);
@@ -49,6 +55,8 @@ export async function POST(req: NextRequest) {
     const config = {
       configurable: {
         userId,
+        requireConfirmation,
+        rules: activeRules, // 🆕 Passer les règles à l'agent
       },
     };
 
@@ -79,13 +87,35 @@ export async function POST(req: NextRequest) {
       (msg: any) => msg.tool_calls?.length > 0
     );
 
+    // 🆕 Détecter si un pending_event ou pending_batch_event a été généré par un tool
+    let pendingEvent = null;
+    for (const msg of finalMessages) {
+      // Les ToolMessage ont le résultat de l'outil dans content
+      if (msg.content && typeof msg.content === 'string') {
+        try {
+          const parsed = JSON.parse(msg.content);
+          if (parsed.type === 'pending_event' || parsed.type === 'pending_batch_event') {
+            pendingEvent = parsed;
+            const eventInfo = parsed.type === 'pending_batch_event'
+              ? `${parsed.count || parsed.eventIds?.length || 0} événements`
+              : parsed.event?.title;
+            logger.info(`[API /chat] 🎯 ${parsed.type} détecté: ${eventInfo}`);
+            break;
+          }
+        } catch {
+          // Pas du JSON, on ignore
+        }
+      }
+    }
+
     const responseTime = Date.now() - startTime;
-    logger.info(`[API /chat] Agent completed in ${responseTime}ms`);
+    logger.info(`[API /chat] Agent completed in ${responseTime}ms${pendingEvent ? ' (avec pending_event)' : ''}`);
 
     return NextResponse.json({
       message: cleanContent,
       events: [],
-      action,
+      action: pendingEvent ? 'pending' : action,
+      pendingEvent, // 🆕 Nouveau champ pour les événements en attente
       metadata: {
         responseTime,
         toolCalls: toolMessages.length,

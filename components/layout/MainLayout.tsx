@@ -2,7 +2,7 @@
 
 import { ChatInterface } from '@/components/chat/ChatInterface';
 import { Calendar } from '@/components/calendar/Calendar';
-import { ChatMessage, CalendarEvent } from '@/types';
+import { ChatMessage, CalendarEvent, PendingEventResponse, PendingEvent } from '@/types';
 
 interface MainLayoutProps {
   messages: ChatMessage[];
@@ -11,6 +11,12 @@ interface MainLayoutProps {
   isLoading: boolean;
   onEventClick: (event: CalendarEvent) => void;
   onDayClick: (date: Date) => void;
+  // 🆕 Props pour la confirmation d'événements
+  pendingEvent?: PendingEventResponse | null;
+  isConfirming?: boolean;
+  onConfirmEvent?: () => Promise<void>;
+  onModifyEvent?: () => void;
+  onRejectEvent?: (reason?: string) => Promise<void>;
 }
 
 /**
@@ -23,21 +29,31 @@ export function MainLayout({
   isLoading,
   onEventClick,
   onDayClick,
+  pendingEvent,
+  isConfirming,
+  onConfirmEvent,
+  onModifyEvent,
+  onRejectEvent,
 }: MainLayoutProps) {
   return (
     <main className="max-w-[1800px] mx-auto p-6">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6" style={{height: 'calc(100vh - 180px)', overflow: 'hidden'}}>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6" style={{ height: 'calc(100vh - 180px)', overflow: 'hidden' }}>
         {/* Chat Section */}
-        <div style={{minHeight: 0, height: '100%', overflow: 'hidden'}}>
+        <div style={{ minHeight: 0, height: '100%', overflow: 'hidden' }}>
           <ChatInterface
             messages={messages}
             onSendMessage={onSendMessage}
             isLoading={isLoading}
+            pendingEvent={pendingEvent}
+            isConfirming={isConfirming}
+            onConfirmEvent={onConfirmEvent}
+            onModifyEvent={onModifyEvent}
+            onRejectEvent={onRejectEvent}
           />
         </div>
 
         {/* Calendar Section */}
-        <div style={{minHeight: 0, height: '100%', overflow: 'hidden'}}>
+        <div style={{ minHeight: 0, height: '100%', overflow: 'hidden' }}>
           <Calendar
             events={events}
             onEventClick={onEventClick}
@@ -48,4 +64,3 @@ export function MainLayout({
     </main>
   );
 }
-

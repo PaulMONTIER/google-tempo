@@ -10,23 +10,42 @@ import { ArbrePanel } from '@/components/arbre/ArbrePanel';
 import { AuthGate } from '@/components/layout/AuthGate';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { MainLayout } from '@/components/layout/MainLayout';
+import { EventEditModal } from '@/components/chat/EventEditModal';
 import { useCalendarEvents } from '@/hooks/use-calendar-events';
 import { useChatMessages } from '@/hooks/use-chat-messages';
 import { usePanelState } from '@/hooks/use-panel-state';
+import { useSettings } from '@/components/providers/settings-provider';
 import { CalendarEvent } from '@/types';
 
 export default function Home() {
   const { data: session, status } = useSession();
   const isAuthenticated = status === 'authenticated';
-  
+  const { settings } = useSettings();
+
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
 
   // Hooks pour gérer les données et états
   const { events, refreshEvents } = useCalendarEvents(isAuthenticated);
-  const { messages, sendMessage, isLoading, clearMessages } = useChatMessages({
+  const {
+    messages,
+    sendMessage,
+    isLoading,
+    clearMessages,
+    // 🆕 Exports pour la confirmation
+    pendingEvent,
+    isConfirming,
+    confirmEvent,
+    modifyEvent,
+    rejectEvent,
+    // 🆕 Exports pour l'édition
+    isEditingEvent,
+    cancelModify,
+    confirmWithModification,
+  } = useChatMessages({
     isAuthenticated,
     onCalendarRefresh: refreshEvents,
+    requireConfirmation: settings.requireEventConfirmation,
   });
   const panelState = usePanelState();
 
@@ -80,14 +99,29 @@ export default function Home() {
         isLoading={isLoading}
         onEventClick={handleEventClick}
         onDayClick={handleDayClick}
+        pendingEvent={pendingEvent}
+        isConfirming={isConfirming}
+        onConfirmEvent={confirmEvent}
+        onModifyEvent={modifyEvent}
+        onRejectEvent={rejectEvent}
       />
 
       {/* Panels */}
       <SettingsPanel isOpen={panelState.isSettingsOpen} onClose={() => panelState.setIsSettingsOpen(false)} />
       <RulesPanel isOpen={panelState.isRulesOpen} onClose={() => panelState.setIsRulesOpen(false)} />
-      <ArbrePanel isOpen={panelState.isArbreOpen} onClose={() => panelState.setIsArbreOpen(false)} events={events} />
+      <ArbrePanel isOpen={panelState.isArbreOpen} onClose={() => panelState.setIsArbreOpen(false)} />
       <NotificationPanel isOpen={panelState.isNotificationPanelOpen} onClose={() => panelState.setIsNotificationPanelOpen(false)} />
       <EventDetailsPanel event={selectedEvent} onClose={() => setSelectedEvent(null)} allEvents={events} />
+
+      {/* 🆕 Modal d'édition d'événement */}
+      {isEditingEvent && pendingEvent && (
+        <EventEditModal
+          pendingEvent={pendingEvent}
+          onSave={confirmWithModification}
+          onCancel={cancelModify}
+          isLoading={isConfirming}
+        />
+      )}
     </div>
   );
 }

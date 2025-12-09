@@ -15,24 +15,47 @@ function getTools(): StructuredToolInterface[] {
   if (_tools) {
     return _tools;
   }
-  
+
   // Protection contre la réentrance (défensive, Node.js est single-threaded)
   if (_isInitializingTools) {
     throw new Error("Tools are being initialized");
   }
-  
+
   _isInitializingTools = true;
   try {
     // Import dynamique pour éviter les cycles au build
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const toolsModule = require("../tools/calendar");
-    _tools = [
+
+    // Import direct des outils batch (contournement du problème de re-export)
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const filterModule = require("../tools/calendar/filter-events");
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const batchModule = require("../tools/calendar/batch-delete");
+
+    const allTools = [
       toolsModule.findFreeSlotsTool,
       toolsModule.createEventTool,
       toolsModule.addMeetToEventTool,
       toolsModule.getEventsTool,
       toolsModule.deleteEventTool,
+      toolsModule.createPreparationTreeTool,
+      // Outils batch importés directement
+      filterModule.filterEventsTool,
+      batchModule.batchDeleteTool,
     ];
+
+    // Filtrer les outils undefined (sécurité)
+    _tools = allTools.filter((tool): tool is StructuredToolInterface => {
+      if (!tool) {
+        console.warn('[model-config] Un outil est undefined, ignoré');
+        return false;
+      }
+      return true;
+    });
+
+    console.log(`[model-config] ${_tools.length} outils chargés: ${_tools.map(t => t.name).join(', ')}`);
+
     return _tools;
   } finally {
     _isInitializingTools = false;
@@ -50,12 +73,12 @@ export function getToolNode(): ToolNode {
   if (_toolNode) {
     return _toolNode;
   }
-  
+
   // Protection contre la réentrance (défensive)
   if (_isInitializingToolNode) {
     throw new Error("Tool node is being initialized");
   }
-  
+
   _isInitializingToolNode = true;
   try {
     _toolNode = new ToolNode(getTools());

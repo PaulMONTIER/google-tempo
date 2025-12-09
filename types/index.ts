@@ -30,14 +30,14 @@ export interface ChatMessage {
   timestamp: Date;
   metadata?: {
     events?: CalendarEvent[];
-    action?: 'create' | 'update' | 'delete' | 'search' | 'none';
+    action?: 'create' | 'update' | 'delete' | 'search' | 'none' | 'pending';
   };
 }
 
 export interface AIResponse {
   message: string;
   events?: CalendarEvent[];
-  action?: 'create' | 'update' | 'delete' | 'search' | 'none';
+  action?: 'create' | 'update' | 'delete' | 'search' | 'none' | 'pending';
   error?: string;
 }
 
@@ -62,3 +62,6 @@ export interface Rule {
   enabled: boolean;
   createdAt: Date;
 }
+
+// Export des types pour la confirmation d'événements
+export * from './pending-event';

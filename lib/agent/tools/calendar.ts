@@ -10,5 +10,6 @@ export {
   getEventsTool,
   addMeetToEventTool,
   deleteEventTool,
+  createPreparationTreeTool,
 } from "./calendar/index";
 

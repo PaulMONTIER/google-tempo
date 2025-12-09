@@ -6,7 +6,7 @@ import { fr } from 'date-fns/locale';
 import { useState, useEffect } from 'react';
 import { formatTime, formatHourLabel } from '@/lib/utils/time-formatters';
 import { CALENDAR, DURATIONS } from '@/lib/constants/ui-constants';
-import { calendarLayoutStyles, hiddenEventBadgeStyles, currentTimeIndicatorStyles, getEventStyles } from '@/lib/utils/style-helpers';
+import { calendarLayoutStyles, currentTimeIndicatorStyles } from '@/lib/utils/style-helpers';
 
 interface DayViewProps {
   currentDate: Date;
@@ -23,11 +23,7 @@ export function DayView({
 }: DayViewProps) {
   const hours = Array.from({ length: 24 }, (_, i) => i);
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [scrollTop, setScrollTop] = useState(0);
-  const [scrollHeight, setScrollHeight] = useState(0);
-  const [clientHeight, setClientHeight] = useState(0);
 
-  // Update current time every minute
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentTime(new Date());
@@ -43,118 +39,84 @@ export function DayView({
     });
   };
 
-  // Calculate position of current time line
   const isCurrentDay = isToday(currentDate);
   const currentHour = currentTime.getHours();
   const currentMinutes = currentTime.getMinutes();
   const currentTimePosition = (currentHour * CALENDAR.hourHeight) + (currentMinutes / 60 * CALENDAR.hourHeight);
 
-  // Get all events for today
-  const todayEvents = events.filter(event => isSameDay(new Date(event.startDate), currentDate));
-
-  // Calculate hidden events
-  const getHiddenEventsCount = () => {
-    const visibleTopPosition = scrollTop;
-    const visibleBottomPosition = scrollTop + clientHeight;
-
-    let eventsAbove = 0;
-    let eventsBelow = 0;
-
-    todayEvents.forEach(event => {
-      const eventStart = new Date(event.startDate);
-      const eventHour = getHours(eventStart);
-      const eventPosition = eventHour * CALENDAR.hourHeight;
-
-      if (eventPosition < visibleTopPosition) {
-        eventsAbove++;
-      } else if (eventPosition > visibleBottomPosition) {
-        eventsBelow++;
-      }
-    });
-
-    return { eventsAbove, eventsBelow };
-  };
-
-  const { eventsAbove, eventsBelow } = getHiddenEventsCount();
-
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    const target = e.currentTarget;
-    setScrollTop(target.scrollTop);
-    setScrollHeight(target.scrollHeight);
-    setClientHeight(target.clientHeight);
-  };
-
   return (
-    <div className="flex flex-col p-6" style={calendarLayoutStyles.container}>
-      <div className="bg-notion-bg border-b border-notion-border p-4" style={calendarLayoutStyles.header}>
+    <div className="flex flex-col h-full bg-notion-bg">
+      {/* Header */}
+      <div className="px-6 py-5 border-b border-notion-border">
         <div className="text-center">
-          <div className="text-sm font-medium text-notion-textLight uppercase">
+          <p className="text-xs font-medium text-notion-textLight uppercase tracking-wide">
             {format(currentDate, 'EEEE', { locale: fr })}
-          </div>
-          <div className="text-2xl font-semibold text-notion-text mt-1">
+          </p>
+          <p className="text-xl font-semibold text-notion-text mt-1">
             {format(currentDate, 'd MMMM yyyy', { locale: fr })}
-          </div>
+          </p>
         </div>
       </div>
 
-      <div
-        style={calendarLayoutStyles.scrollable}
-        onScroll={handleScroll}
-      >
-        {/* Badge événements cachés en haut */}
-        {eventsAbove > 0 && (
-          <div
-            style={{ ...hiddenEventBadgeStyles.base, ...hiddenEventBadgeStyles.top }}
-          >
-            ↑ {eventsAbove} événement{eventsAbove > 1 ? 's' : ''} au-dessus
-          </div>
-        )}
+      {/* Grille */}
+      <div className="flex-1 overflow-y-auto" style={calendarLayoutStyles.scrollable}>
+        <div className="relative">
+          {hours.map((hour) => {
+            const hourEvents = getEventsForHour(hour);
+            return (
+              <div
+                key={hour}
+                className="flex"
+                style={{ minHeight: `${CALENDAR.hourHeight}px` }}
+              >
+                <div className="w-16 flex-shrink-0 text-right pr-4 pt-0.5">
+                  <span className="text-xs text-notion-textLight">
+                    {formatHourLabel(hour, timeFormat === '24h')}
+                  </span>
+                </div>
 
-        {hours.map((hour) => {
-          const hourEvents = getEventsForHour(hour);
-          return (
-            <div key={hour} className={`flex gap-4 border-b border-notion-border overflow-hidden`} style={{ height: `${CALENDAR.hourHeight}px` }}>
-              <div className="w-20 text-sm text-notion-textLight text-right flex-shrink-0 flex items-center justify-end">
-                {formatHourLabel(hour, timeFormat === '24h')}
+                <div className="flex-1 border-t border-notion-border pr-2">
+                  {hourEvents.map((event) => {
+                    const eventColor = event.color || '#2383e2';
+                    return (
+                      <div
+                        key={event.id}
+                        onClick={() => onEventClick?.(event)}
+                        className="group flex items-start gap-4 h-full py-2.5 px-4 rounded-lg cursor-pointer transition-colors hover:shadow-sm"
+                        style={{
+                          backgroundColor: `${eventColor}20`,
+                          minHeight: `${CALENDAR.hourHeight - 8}px`
+                        }}
+                      >
+                        {/* Barre verticale */}
+                        <div
+                          className="w-1 self-stretch rounded-full"
+                          style={{ backgroundColor: eventColor }}
+                        />
+
+                        {/* Texte */}
+                        <div className="flex-1 min-w-0 flex flex-col justify-center">
+                          <p className="text-sm text-notion-text font-medium truncate">
+                            {event.title}
+                          </p>
+                          <p className="text-xs text-notion-textLight">
+                            {formatTime(new Date(event.startDate), timeFormat === '24h')} – {formatTime(new Date(event.endDate), timeFormat === '24h')}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-              <div className="flex-1 h-full">
-                {hourEvents.map((event) => (
-                  <div
-                    key={event.id}
-                    onClick={() => onEventClick?.(event)}
-                    className="h-full px-3 rounded-lg cursor-pointer hover:shadow-md transition-shadow overflow-hidden flex flex-col justify-center"
-                    style={getEventStyles(event.color || '#2383e2')}
-                  >
-                    <div className="font-semibold text-notion-text text-sm truncate">
-                      {event.title}
-                    </div>
-                    <div className="text-xs text-notion-textLight truncate">
-                      {formatTime(new Date(event.startDate), timeFormat === '24h')} - {formatTime(new Date(event.endDate), timeFormat === '24h')}
-                    </div>
-                  </div>
-                ))}
-              </div>
+            );
+          })}
+
+          {isCurrentDay && (
+            <div style={{ ...currentTimeIndicatorStyles.line, top: `${currentTimePosition}px` }}>
+              <div style={currentTimeIndicatorStyles.dot} />
             </div>
-          );
-        })}
-
-        {/* Badge événements cachés en bas */}
-        {eventsBelow > 0 && (
-          <div
-            style={{ ...hiddenEventBadgeStyles.base, ...hiddenEventBadgeStyles.bottom }}
-          >
-            ↓ {eventsBelow} événement{eventsBelow > 1 ? 's' : ''} en dessous
-          </div>
-        )}
-
-        {/* Current time indicator line */}
-        {isCurrentDay && (
-          <div
-            style={{ ...currentTimeIndicatorStyles.line, top: `${currentTimePosition}px` }}
-          >
-            <div style={currentTimeIndicatorStyles.dot} />
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );
