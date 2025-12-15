@@ -1,15 +1,18 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import { ChatMessage, PendingEventResponse, PendingEvent } from '@/types';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { ChatMessage, PendingEventResponse } from '@/types';
 import { Send, Loader2 } from '@/components/icons';
 import { EventConfirmationCard } from './EventConfirmationCard';
+import { VoiceButton } from './VoiceButton';
+import { VoiceIndicator } from './VoiceIndicator';
+import { useVoiceAssistant } from '@/hooks/use-voice-assistant';
+import { useSettings } from '@/components/providers/settings-provider';
 
 interface ChatInterfaceProps {
   messages: ChatMessage[];
-  onSendMessage: (message: string) => Promise<void>;
+  onSendMessage: (message: string) => Promise<string | void>;
   isLoading?: boolean;
-  // 🆕 Props pour la confirmation d'événements
   pendingEvent?: PendingEventResponse | null;
   isConfirming?: boolean;
   onConfirmEvent?: () => Promise<void>;
@@ -30,6 +33,40 @@ export function ChatInterface({
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const pendingVoiceRef = useRef(false);
+  const lastMessageCountRef = useRef(0);
+  const { settings } = useSettings();
+
+  // Hook pour l'assistant vocal (Web Speech API)
+  const voiceSession = useVoiceAssistant({
+    autoStop: settings.voiceAutoStop, // Option: couper le micro après chaque phrase
+    onTranscript: async (text: string) => {
+      console.log('[ChatInterface] Voice transcript received:', text);
+      pendingVoiceRef.current = true;
+      try {
+        await onSendMessage(`🎤 ${text}`);
+      } catch (error) {
+        console.error('[ChatInterface] Error sending voice message:', error);
+        voiceSession.speak('Désolé, une erreur s\'est produite.');
+      }
+    },
+    onError: (error) => {
+      console.error('[Voice] Error:', error);
+    }
+  });
+
+  // Quand un nouveau message assistant arrive et qu'on attend une réponse vocale
+  useEffect(() => {
+    if (pendingVoiceRef.current && messages.length > lastMessageCountRef.current) {
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage.role === 'assistant') {
+        console.log('[ChatInterface] Speaking response:', lastMessage.content.substring(0, 50));
+        voiceSession.speak(lastMessage.content);
+        pendingVoiceRef.current = false;
+      }
+    }
+    lastMessageCountRef.current = messages.length;
+  }, [messages, voiceSession]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -48,14 +85,47 @@ export function ChatInterface({
     await onSendMessage(message);
   };
 
+  const handleVoiceToggle = () => {
+    if (voiceSession.isActive) {
+      voiceSession.stopSession();
+    } else {
+      voiceSession.startSession();
+    }
+  };
+
+  const isVoiceProcessing = voiceSession.isProcessing || (pendingVoiceRef.current && isLoading);
+
   return (
     <div className="flex flex-col bg-notion-bg rounded-lg shadow-sm border border-notion-border" style={{ height: '100%', maxHeight: '100%', overflow: 'hidden' }}>
       {/* Header */}
       <div className="px-6 py-4 border-b border-notion-border" style={{ flexShrink: 0 }}>
-        <h2 className="text-lg font-semibold text-notion-text">Tempo</h2>
-        <p className="text-xs text-notion-textLight">
-          Assistant calendrier
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-semibold text-notion-text">Tempo</h2>
+            <p className="text-xs text-notion-textLight">
+              Assistant calendrier
+            </p>
+          </div>
+
+          <VoiceIndicator
+            isActive={voiceSession.isActive}
+            isListening={voiceSession.isListening}
+            isSpeaking={voiceSession.isSpeaking}
+          />
+        </div>
+
+        {voiceSession.isActive && (voiceSession.transcript || isVoiceProcessing) && (
+          <div className="mt-2 p-2 bg-notion-sidebar rounded text-sm text-notion-text">
+            {isVoiceProcessing ? (
+              <span className="flex items-center gap-2">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Traitement en cours...
+              </span>
+            ) : (
+              <span className="italic">&quot;{voiceSession.transcript}&quot;</span>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Messages */}
@@ -64,7 +134,7 @@ export function ChatInterface({
           <div className="flex items-center justify-center h-full">
             <div className="text-center text-notion-textLight">
               <p className="text-lg mb-2">Bonjour ! Je suis Tempo</p>
-              <p className="text-sm">Comment puis-je vous aider avec votre calendrier aujourd hui ?</p>
+              <p className="text-sm">Comment puis-je vous aider avec votre calendrier aujourd&apos;hui ?</p>
             </div>
           </div>
         )}
@@ -92,7 +162,6 @@ export function ChatInterface({
           </div>
         ))}
 
-        {/* 🆕 Carte de confirmation pour les événements en attente */}
         {pendingEvent && onConfirmEvent && onModifyEvent && onRejectEvent && (
           <EventConfirmationCard
             pendingEvent={pendingEvent}
@@ -103,7 +172,7 @@ export function ChatInterface({
           />
         )}
 
-        {isLoading && (
+        {isLoading && !voiceSession.isActive && (
           <div className="flex justify-start">
             <div className="bg-notion-sidebar text-notion-text rounded-lg px-4 py-3">
               <Loader2 className="w-5 h-5 animate-spin" />
@@ -122,13 +191,32 @@ export function ChatInterface({
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder={pendingEvent ? "Confirmez ou refusez l'événement proposé..." : "Tapez votre message..."}
-            disabled={isLoading || isConfirming}
+            placeholder={
+              voiceSession.isActive
+                ? isVoiceProcessing
+                  ? "Traitement en cours..."
+                  : "Parlez, je vous écoute..."
+                : pendingEvent
+                  ? "Confirmez ou refusez l'événement proposé..."
+                  : "Tapez votre message..."
+            }
+            disabled={isLoading || isConfirming || voiceSession.isActive}
             className="flex-1 px-4 py-3 bg-notion-bg border border-notion-border rounded-lg focus:outline-none focus:ring-2 focus:ring-notion-blue focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
           />
+
+          <VoiceButton
+            isActive={voiceSession.isActive}
+            isConnecting={isVoiceProcessing}
+            isListening={voiceSession.isListening}
+            isSpeaking={voiceSession.isSpeaking}
+            onClick={handleVoiceToggle}
+            disabled={isLoading || isConfirming}
+            error={voiceSession.error}
+          />
+
           <button
             type="submit"
-            disabled={!input.trim() || isLoading || isConfirming}
+            disabled={!input.trim() || isLoading || isConfirming || voiceSession.isActive}
             className="px-6 py-3 bg-notion-blue text-white rounded-lg hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-notion-blue focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             {isLoading ? (
@@ -142,4 +230,3 @@ export function ChatInterface({
     </div>
   );
 }
-

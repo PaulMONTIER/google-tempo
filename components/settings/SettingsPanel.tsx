@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import { X, User, Bell, Palette, Calendar } from '@/components/icons';
+import { X, User, Bell, Palette, Calendar, Mic } from '@/components/icons';
 import { useSettings, UserSettings } from '@/components/providers/settings-provider';
-import { AccountTab, NotificationsTab, AppearanceTab, CalendarTab } from './tabs';
+import { AccountTab, NotificationsTab, AppearanceTab, CalendarTab, VoiceTab } from './tabs';
 import { Z_INDEX, DURATIONS } from '@/lib/constants/ui-constants';
 
 interface SettingsPanelProps {
@@ -12,7 +12,7 @@ interface SettingsPanelProps {
   onClose: () => void;
 }
 
-type SettingsTab = 'account' | 'notifications' | 'appearance' | 'calendar';
+type SettingsTab = 'account' | 'notifications' | 'appearance' | 'calendar' | 'voice';
 
 export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
   const { data: session } = useSession();
@@ -54,6 +54,7 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
     { id: 'notifications' as SettingsTab, label: 'Notifications', icon: Bell },
     { id: 'appearance' as SettingsTab, label: 'Apparence', icon: Palette },
     { id: 'calendar' as SettingsTab, label: 'Calendrier', icon: Calendar },
+    { id: 'voice' as SettingsTab, label: 'Assistant vocal', icon: Mic },
   ];
 
   return (
@@ -61,7 +62,7 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
       {/* Backdrop */}
       <div
         className={`fixed inset-0 bg-black/50 transition-opacity`}
-        style={{ 
+        style={{
           zIndex: Z_INDEX.modalOverlay,
           transitionDuration: `${DURATIONS.animation}ms`,
           opacity: isVisible ? 1 : 0
@@ -72,9 +73,8 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
       {/* Centered Modal */}
       <div className="fixed inset-0 flex items-center justify-center p-4 pointer-events-none" style={{ zIndex: Z_INDEX.modal }}>
         <div
-          className={`w-full max-w-3xl max-h-[85vh] bg-notion-bg rounded-xl shadow-2xl pointer-events-auto transition-all ease-out flex flex-col ${
-            isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
-          }`}
+          className={`w-full max-w-3xl max-h-[85vh] bg-notion-bg rounded-xl shadow-2xl pointer-events-auto transition-all ease-out flex flex-col ${isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
+            }`}
           style={{ transitionDuration: `${DURATIONS.animation}ms` }}
         >
           {/* Header */}
@@ -107,11 +107,10 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
-                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                        activeTab === tab.id
-                          ? 'bg-notion-bg text-notion-text shadow-sm'
-                          : 'text-notion-textLight hover:bg-white/50 hover:text-notion-text'
-                      }`}
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === tab.id
+                        ? 'bg-notion-bg text-notion-text shadow-sm'
+                        : 'text-notion-textLight hover:bg-white/50 hover:text-notion-text'
+                        }`}
                     >
                       <Icon className="w-4 h-4" />
                       {tab.label}
@@ -127,6 +126,7 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
               {activeTab === 'notifications' && <NotificationsTab settings={settings} updateSetting={handleUpdateSetting} />}
               {activeTab === 'appearance' && <AppearanceTab settings={settings} updateSetting={handleUpdateSetting} />}
               {activeTab === 'calendar' && <CalendarTab settings={settings} updateSetting={handleUpdateSetting} />}
+              {activeTab === 'voice' && <VoiceTab settings={settings} updateSetting={handleUpdateSetting} />}
             </div>
           </div>
         </div>

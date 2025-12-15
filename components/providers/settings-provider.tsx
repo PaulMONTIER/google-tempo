@@ -25,6 +25,9 @@ export interface UserSettings {
 
   // Agent
   requireEventConfirmation: boolean;
+
+  // Voice
+  voiceAutoStop: boolean;
 }
 
 interface SettingsContextType {
@@ -45,7 +48,8 @@ const defaultSettings: UserSettings = {
   defaultView: 'month',
   timeFormat: '24h',
   showWeekNumbers: false,
-  requireEventConfirmation: true, // 🆕 Confirmation activée par défaut
+  requireEventConfirmation: true,
+  voiceAutoStop: false, // Le micro reste actif pour plusieurs demandes
 };
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
