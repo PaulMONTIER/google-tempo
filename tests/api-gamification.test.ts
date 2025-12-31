@@ -1,20 +1,16 @@
-import { PrismaClient } from '@prisma/client';
 import { GET as getProgress } from '@/app/api/gamification/progress/route';
 import { GET as getTaskValidations, POST as postTaskValidation, DELETE as deleteTaskValidation } from '@/app/api/gamification/task-validations/route';
 import { GET as getSkills } from '@/app/api/gamification/skills/route';
 import { GET as getReminders } from '@/app/api/notifications/reminders/route';
 import { NextRequest } from 'next/server';
 import { getAppSession } from '@/lib/api/session-service';
-
-// Mock de auth-options pour éviter les problèmes de modules ES
-jest.mock('@/lib/auth/auth-options', () => ({
-  authOptions: {},
-}));
-
-const prisma = new PrismaClient();
+import { getPrismaForTests } from './setup';
 
 // Mock de getAppSession pour chaque test
 jest.mock('@/lib/api/session-service');
+
+// Instance Prisma pour les tests d'intégration
+let prisma: any;
 
 describe('API Gamification - Tests d\'intégration avec profils seedés', () => {
   // Emails des profils de test créés par seed-test-profiles.ts
@@ -29,7 +25,8 @@ describe('API Gamification - Tests d\'intégration avec profils seedés', () => 
   const userIds: Record<string, string> = {};
 
   beforeAll(async () => {
-    await prisma.$connect();
+    // Initialiser Prisma pour les tests d'intégration
+    prisma = await getPrismaForTests();
 
     // Récupérer les userIds des profils seedés
     for (const [key, email] of Object.entries(TEST_PROFILES)) {
@@ -51,9 +48,7 @@ describe('API Gamification - Tests d\'intégration avec profils seedés', () => 
     }
   });
 
-  afterAll(async () => {
-    await prisma.$disconnect();
-  });
+  // Prisma est déconnecté automatiquement par le setup global
 
   // Helper pour créer une NextRequest mockée
   function createMockRequest(url: string, method: string = 'GET', body?: any): NextRequest {

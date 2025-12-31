@@ -144,25 +144,42 @@ export async function addXP(
  * Récupère toutes les statistiques de progression d'un utilisateur
  */
 export async function getProgressStats(userId: string) {
-  const progress = await getOrCreateUserProgress(userId);
+  try {
+    const progress = await getOrCreateUserProgress(userId);
 
-  const currentLevelXp = xpForLevel(progress.level);
-  const nextLevelXp = xpForLevel(progress.level + 1);
-  const xpToNext = nextLevelXp - progress.xp;
-  const progressPercent = ((progress.xp - currentLevelXp) / (nextLevelXp - currentLevelXp)) * 100;
+    const currentLevelXp = xpForLevel(progress.level);
+    const nextLevelXp = xpForLevel(progress.level + 1);
+    const xpToNext = nextLevelXp - progress.xp;
+    const progressPercent = ((progress.xp - currentLevelXp) / (nextLevelXp - currentLevelXp)) * 100;
 
-  return {
-    xp: progress.xp,
-    level: progress.level,
-    currentStreak: progress.currentStreak,
-    longestStreak: progress.longestStreak,
-    totalActions: progress.totalActions,
-    totalTasksCreated: progress.totalTasksCreated,
-    totalTasksCompleted: progress.totalTasksCompleted,
-    totalQuizzesCompleted: progress.totalQuizzesCompleted,
-    xpToNextLevel: xpToNext,
-    progressToNextLevel: Math.min(100, Math.max(0, progressPercent)),
-  };
+    return {
+      xp: progress.xp,
+      level: progress.level,
+      currentStreak: progress.currentStreak,
+      longestStreak: progress.longestStreak,
+      totalActions: progress.totalActions,
+      totalTasksCreated: progress.totalTasksCreated,
+      totalTasksCompleted: progress.totalTasksCompleted,
+      totalQuizzesCompleted: progress.totalQuizzesCompleted,
+      xpToNextLevel: xpToNext,
+      progressToNextLevel: Math.min(100, Math.max(0, progressPercent)),
+    };
+  } catch (error) {
+    logger.error('[progress-service] Erreur getProgressStats:', error);
+    // Retourner des valeurs par défaut en cas d'erreur
+    return {
+      xp: 0,
+      level: 1,
+      currentStreak: 0,
+      longestStreak: 0,
+      totalActions: 0,
+      totalTasksCreated: 0,
+      totalTasksCompleted: 0,
+      totalQuizzesCompleted: 0,
+      xpToNextLevel: 100,
+      progressToNextLevel: 0,
+    };
+  }
 }
 
 /**

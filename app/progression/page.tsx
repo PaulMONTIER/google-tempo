@@ -1,12 +1,15 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { useSkills } from '@/hooks/use-skills';
 import { SkillsRadarChart } from '@/components/progression/SkillsRadarChart';
 import { SkillFamilyCard } from '@/components/progression/SkillFamilyCard';
 import { useUserProgress } from '@/hooks/use-user-progress';
 import { TrendingUp, Award, Target } from '@/components/icons';
+import { ArrowLeft } from 'lucide-react';
 
 export default function ProgressionPage() {
+  const router = useRouter();
   const { skills, isLoading: skillsLoading, error: skillsError } = useSkills();
   const { progress, isLoading: progressLoading } = useUserProgress();
 
@@ -35,8 +38,16 @@ export default function ProgressionPage() {
   return (
     <div className="min-h-screen bg-notion-bg p-6">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
+        {/* Header avec bouton retour */}
         <div className="mb-8">
+          <button
+            onClick={() => router.push('/')}
+            className="flex items-center gap-2 text-notion-textLight hover:text-notion-text 
+                     transition-colors mb-4 group"
+          >
+            <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+            <span>Retour à Tempo</span>
+          </button>
           <h1 className="text-3xl font-bold text-notion-text mb-2">Ma Progression</h1>
           <p className="text-notion-textLight">
             Visualisez votre progression dans toutes vos compétences
