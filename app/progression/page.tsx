@@ -1,17 +1,40 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import { useSkills } from '@/hooks/use-skills';
 import { SkillsRadarChart } from '@/components/progression/SkillsRadarChart';
 import { SkillFamilyCard } from '@/components/progression/SkillFamilyCard';
+import { ArenaDisplay } from '@/components/progression/ArenaDisplay';
+import { ArenaUpgradeModal } from '@/components/progression/ArenaUpgradeModal';
 import { useUserProgress } from '@/hooks/use-user-progress';
-import { TrendingUp, Award, Target } from '@/components/icons';
+import { getArenaForXp, hasLeveledUp, Arena } from '@/lib/gamification/arena-config';
+import { TrendingUp, Award, Target, Flame } from 'lucide-react';
 import { ArrowLeft } from 'lucide-react';
 
 export default function ProgressionPage() {
   const router = useRouter();
   const { skills, isLoading: skillsLoading, error: skillsError } = useSkills();
-  const { progress, isLoading: progressLoading } = useUserProgress();
+  const { stats: progress, isLoading: progressLoading } = useUserProgress();
+
+  // État pour le modal d'upgrade d'arène
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [newArena, setNewArena] = useState<Arena | null>(null);
+  const [previousXp, setPreviousXp] = useState<number | null>(null);
+
+  // Détecter une montée d'arène
+  useEffect(() => {
+    if (progress && previousXp !== null) {
+      if (hasLeveledUp(previousXp, progress.xp)) {
+        const arena = getArenaForXp(progress.xp);
+        setNewArena(arena);
+        setShowUpgradeModal(true);
+      }
+    }
+    if (progress) {
+      setPreviousXp(progress.xp);
+    }
+  }, [progress?.xp, previousXp]);
 
   if (skillsLoading || progressLoading) {
     return (
@@ -54,41 +77,60 @@ export default function ProgressionPage() {
           </p>
         </div>
 
+        {/* Arène Display - Section principale */}
+        {progress && (
+          <div className="mb-8">
+            <ArenaDisplay xp={progress.xp} showDetails={true} />
+          </div>
+        )}
+
         {/* Stats Cards */}
         {progress && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-notion-border">
-              <div className="flex items-center gap-3 mb-2">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-notion-border">
+              <div className="flex items-center gap-3">
                 <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
                   <TrendingUp className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div>
-                  <p className="text-sm text-notion-textLight">Niveau</p>
-                  <p className="text-2xl font-bold text-notion-text">{progress.level}</p>
+                  <p className="text-xs text-notion-textLight">Niveau</p>
+                  <p className="text-xl font-bold text-notion-text">{progress.level}</p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-notion-border">
-              <div className="flex items-center gap-3 mb-2">
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-notion-border">
+              <div className="flex items-center gap-3">
                 <div className="p-2 bg-green-100 dark:bg-green-900/20 rounded-lg">
                   <Award className="w-5 h-5 text-green-600 dark:text-green-400" />
                 </div>
                 <div>
-                  <p className="text-sm text-notion-textLight">XP Total</p>
-                  <p className="text-2xl font-bold text-notion-text">{progress.xp.toLocaleString()}</p>
+                  <p className="text-xs text-notion-textLight">XP Total</p>
+                  <p className="text-xl font-bold text-notion-text">{progress.xp.toLocaleString()}</p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-notion-border">
-              <div className="flex items-center gap-3 mb-2">
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-notion-border">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-orange-100 dark:bg-orange-900/20 rounded-lg">
+                  <Flame className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+                </div>
+                <div>
+                  <p className="text-xs text-notion-textLight">Streak</p>
+                  <p className="text-xl font-bold text-notion-text">{progress.currentStreak} jours</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-notion-border">
+              <div className="flex items-center gap-3">
                 <div className="p-2 bg-purple-100 dark:bg-purple-900/20 rounded-lg">
                   <Target className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                 </div>
                 <div>
-                  <p className="text-sm text-notion-textLight">Streak</p>
-                  <p className="text-2xl font-bold text-notion-text">{progress.currentStreak} jours</p>
+                  <p className="text-xs text-notion-textLight">Quiz complétés</p>
+                  <p className="text-xl font-bold text-notion-text">{progress.totalQuizzesCompleted}</p>
                 </div>
               </div>
             </div>
@@ -119,8 +161,15 @@ export default function ProgressionPage() {
           )}
         </div>
       </div>
+
+      {/* Modal d'upgrade d'arène */}
+      {newArena && (
+        <ArenaUpgradeModal
+          isOpen={showUpgradeModal}
+          onClose={() => setShowUpgradeModal(false)}
+          newArena={newArena}
+        />
+      )}
     </div>
   );
 }
-
-

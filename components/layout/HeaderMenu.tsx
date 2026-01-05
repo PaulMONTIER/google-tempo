@@ -1,6 +1,5 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { Settings, Menu, Trash, HelpCircle, Zap, GitBranch, TrendingUp } from '@/components/icons';
 import { Z_INDEX } from '@/lib/constants/ui-constants';
 
@@ -11,6 +10,7 @@ interface HeaderMenuProps {
   onOpenSettings: () => void;
   onOpenRules: () => void;
   onOpenArbre: () => void;
+  onOpenProgression: () => void;
   onClearChat: () => void;
 }
 
@@ -24,10 +24,9 @@ export function HeaderMenu({
   onOpenSettings,
   onOpenRules,
   onOpenArbre,
+  onOpenProgression,
   onClearChat,
 }: HeaderMenuProps) {
-  const router = useRouter();
-
   return (
     <div className="relative" ref={menuRef}>
       <button
@@ -73,7 +72,7 @@ export function HeaderMenu({
             </button>
             <button
               onClick={() => {
-                router.push('/progression');
+                onOpenProgression();
                 setIsOpen(false);
               }}
               className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-notion-text hover:bg-notion-hover transition-colors"
@@ -104,4 +103,3 @@ export function HeaderMenu({
     </div>
   );
 }
-

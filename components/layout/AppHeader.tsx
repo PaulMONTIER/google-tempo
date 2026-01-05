@@ -10,6 +10,7 @@ interface AppHeaderProps {
   onOpenSettings: () => void;
   onOpenRules: () => void;
   onOpenArbre: () => void;
+  onOpenProgression: () => void;
   onClearChat: () => void;
   onOpenNotifications: () => void;
   isMenuOpen: boolean;
@@ -26,6 +27,7 @@ export function AppHeader({
   onOpenSettings,
   onOpenRules,
   onOpenArbre,
+  onOpenProgression,
   onClearChat,
   onOpenNotifications,
   isMenuOpen,
@@ -45,6 +47,7 @@ export function AppHeader({
               onOpenSettings={onOpenSettings}
               onOpenRules={onOpenRules}
               onOpenArbre={onOpenArbre}
+              onOpenProgression={onOpenProgression}
               onClearChat={onClearChat}
             />
 
@@ -68,4 +71,3 @@ export function AppHeader({
     </header>
   );
 }
-

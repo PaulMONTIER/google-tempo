@@ -7,6 +7,7 @@ import { NotificationPanel } from '@/components/notifications/NotificationPanel'
 import { EventDetailsPanel } from '@/components/events/EventDetailsPanel';
 import { RulesPanel } from '@/components/rules/RulesPanel';
 import { ArbrePanel } from '@/components/arbre/ArbrePanel';
+import { ProgressionPanel } from '@/components/progression/ProgressionPanel';
 import { AuthGate } from '@/components/layout/AuthGate';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { MainLayout } from '@/components/layout/MainLayout';
@@ -18,7 +19,7 @@ import { CalendarEvent } from '@/types';
 export default function Home() {
   const { data: session, status } = useSession();
   const isAuthenticated = status === 'authenticated';
-  
+
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
 
@@ -66,6 +67,7 @@ export default function Home() {
         onOpenSettings={() => panelState.setIsSettingsOpen(true)}
         onOpenRules={() => panelState.setIsRulesOpen(true)}
         onOpenArbre={() => panelState.setIsArbreOpen(true)}
+        onOpenProgression={() => panelState.setIsProgressionOpen(true)}
         onClearChat={clearMessages}
         onOpenNotifications={() => panelState.setIsNotificationPanelOpen(true)}
         isMenuOpen={panelState.isMenuOpen}
@@ -86,6 +88,7 @@ export default function Home() {
       <SettingsPanel isOpen={panelState.isSettingsOpen} onClose={() => panelState.setIsSettingsOpen(false)} />
       <RulesPanel isOpen={panelState.isRulesOpen} onClose={() => panelState.setIsRulesOpen(false)} />
       <ArbrePanel isOpen={panelState.isArbreOpen} onClose={() => panelState.setIsArbreOpen(false)} events={events} />
+      <ProgressionPanel isOpen={panelState.isProgressionOpen} onClose={() => panelState.setIsProgressionOpen(false)} />
       <NotificationPanel isOpen={panelState.isNotificationPanelOpen} onClose={() => panelState.setIsNotificationPanelOpen(false)} />
       <EventDetailsPanel event={selectedEvent} onClose={() => setSelectedEvent(null)} allEvents={events} />
     </div>

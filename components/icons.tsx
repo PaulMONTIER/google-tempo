@@ -327,3 +327,19 @@ export function Target({ className }: { className?: string }) {
     </svg>
   );
 }
+
+export function List({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+    </svg>
+  );
+}
+
+export function Trophy({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3h14a2 2 0 012 2v2a5 5 0 01-5 5h-1v4h2a2 2 0 012 2v1H5v-1a2 2 0 012-2h2v-4H8a5 5 0 01-5-5V5a2 2 0 012-2z" />
+    </svg>
+  );
+}
