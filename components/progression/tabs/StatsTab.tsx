@@ -1,11 +1,10 @@
 'use client';
 
 import { useUserProgress } from '@/hooks/use-user-progress';
-import { Section } from '@/components/progression/components';
-import { Award, Flame, Target, CheckCircle, Zap, BarChart3 } from 'lucide-react';
+import { Award, Flame, Target, CheckCircle, TrendingUp, Zap } from 'lucide-react';
 
 /**
- * Onglet Statistiques - Style cohérent avec les Settings
+ * Onglet Statistiques - Style Apple/Notion
  */
 export function StatsTab() {
     const { stats, isLoading, error } = useUserProgress();
@@ -26,89 +25,118 @@ export function StatsTab() {
         );
     }
 
+    const completionRate = stats.totalTasksCreated > 0
+        ? Math.round((stats.totalTasksCompleted / stats.totalTasksCreated) * 100)
+        : 0;
+
     return (
-        <div className="space-y-6">
-            {/* XP & Niveau */}
-            <Section title="Expérience" icon={Award}>
-                <div className="space-y-3">
-                    <StatRow label="XP Total" value={stats.xp.toLocaleString()} icon={Award} />
-                    <StatRow label="Niveau" value={stats.level.toString()} icon={BarChart3} />
-                </div>
+        <div className="space-y-5">
+            {/* Grandes métriques en haut */}
+            <div className="grid grid-cols-3 gap-4">
+                <MetricCard
+                    icon={Award}
+                    value={stats.xp.toLocaleString()}
+                    label="XP Total"
+                />
+                <MetricCard
+                    icon={TrendingUp}
+                    value={stats.level.toString()}
+                    label="Niveau"
+                />
+                <MetricCard
+                    icon={Flame}
+                    value={stats.currentStreak.toString()}
+                    label="Jours de streak"
+                />
+            </div>
 
-                {/* Barre de progression vers prochain niveau */}
-                <div className="mt-4 p-4 bg-notion-sidebar rounded-lg border border-notion-border">
-                    <div className="flex justify-between text-sm text-notion-textLight mb-2">
-                        <span>Niveau {stats.level}</span>
-                        <span>Niveau {stats.level + 1}</span>
-                    </div>
-                    <div className="h-2 bg-notion-border rounded-full overflow-hidden">
-                        <div
-                            className="h-full bg-notion-blue rounded-full transition-all"
-                            style={{ width: `${stats.progressToNextLevel}%` }}
-                        />
-                    </div>
-                    <p className="text-center text-xs text-notion-textLight mt-2">
-                        {stats.xpToNextLevel} XP pour le prochain niveau
-                    </p>
+            {/* Progression vers niveau suivant */}
+            <div className="p-5 rounded-xl border border-notion-border bg-notion-bg">
+                <div className="flex items-center justify-between mb-4">
+                    <span className="text-sm font-medium text-notion-text">Progression niveau {stats.level}</span>
+                    <span className="text-sm text-notion-textLight">{stats.xpToNextLevel} XP restants</span>
                 </div>
-            </Section>
+                <div className="h-2 bg-notion-sidebar rounded-full overflow-hidden">
+                    <div
+                        className="h-full bg-notion-blue rounded-full transition-all duration-500"
+                        style={{ width: `${stats.progressToNextLevel}%` }}
+                    />
+                </div>
+            </div>
 
-            {/* Streaks */}
-            <Section title="Régularité" icon={Flame}>
-                <div className="space-y-3">
-                    <StatRow label="Streak actuel" value={`${stats.currentStreak} jours`} icon={Flame} />
-                    <StatRow label="Meilleur streak" value={`${stats.longestStreak} jours`} icon={Zap} />
-                </div>
-            </Section>
-
-            {/* Activité */}
-            <Section title="Activité" icon={Target}>
-                <div className="space-y-3">
-                    <StatRow label="Tâches créées" value={stats.totalTasksCreated.toString()} icon={Target} />
-                    <StatRow label="Tâches complétées" value={stats.totalTasksCompleted.toString()} icon={CheckCircle} />
-                </div>
-            </Section>
-
-            {/* Quiz */}
-            <Section title="Quiz" icon={CheckCircle}>
-                <div className="flex items-center justify-between py-3 px-4 rounded-lg hover:bg-notion-hover transition-colors">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 bg-notion-sidebar rounded-lg border border-notion-border">
-                            <CheckCircle className="w-4 h-4 text-notion-textLight" />
-                        </div>
-                        <div>
-                            <p className="text-sm font-medium text-notion-text">Quiz complétés</p>
-                            <p className="text-xs text-notion-textLight">Validez vos événements pour gagner de l&apos;XP</p>
-                        </div>
-                    </div>
-                    <span className="text-2xl font-bold text-notion-text">{stats.totalQuizzesCompleted}</span>
-                </div>
-            </Section>
+            {/* Stats détaillées en grille */}
+            <div className="grid grid-cols-2 gap-4">
+                <StatCard
+                    icon={Zap}
+                    title="Meilleur streak"
+                    value={`${stats.longestStreak} jours`}
+                />
+                <StatCard
+                    icon={CheckCircle}
+                    title="Quiz complétés"
+                    value={stats.totalQuizzesCompleted.toString()}
+                />
+                <StatCard
+                    icon={Target}
+                    title="Tâches créées"
+                    value={stats.totalTasksCreated.toString()}
+                />
+                <StatCard
+                    icon={CheckCircle}
+                    title="Tâches complétées"
+                    value={`${stats.totalTasksCompleted} (${completionRate}%)`}
+                />
+            </div>
         </div>
     );
 }
 
 /**
- * Ligne de statistique - Style identique aux Settings
+ * Grande carte métrique - style Apple
  */
-function StatRow({
-    label,
+function MetricCard({
+    icon: Icon,
     value,
-    icon: Icon
+    label
 }: {
-    label: string;
-    value: string;
     icon: React.ComponentType<{ className?: string }>;
+    value: string;
+    label: string;
 }) {
     return (
-        <div className="flex items-center justify-between py-3 px-4 rounded-lg hover:bg-notion-hover transition-colors">
+        <div className="p-5 rounded-xl border border-notion-border bg-notion-bg text-center">
+            <div className="w-10 h-10 mx-auto mb-3 rounded-full bg-notion-sidebar flex items-center justify-center">
+                <Icon className="w-5 h-5 text-notion-textLight" />
+            </div>
+            <p className="text-2xl font-semibold text-notion-text tracking-tight">{value}</p>
+            <p className="text-xs text-notion-textLight mt-1">{label}</p>
+        </div>
+    );
+}
+
+/**
+ * Carte stat secondaire - style Notion
+ */
+function StatCard({
+    icon: Icon,
+    title,
+    value
+}: {
+    icon: React.ComponentType<{ className?: string }>;
+    title: string;
+    value: string;
+}) {
+    return (
+        <div className="p-4 rounded-xl border border-notion-border bg-notion-bg">
             <div className="flex items-center gap-3">
-                <div className="p-2 bg-notion-sidebar rounded-lg border border-notion-border">
+                <div className="w-9 h-9 rounded-lg bg-notion-sidebar flex items-center justify-center flex-shrink-0">
                     <Icon className="w-4 h-4 text-notion-textLight" />
                 </div>
-                <span className="text-sm font-medium text-notion-text">{label}</span>
+                <div className="min-w-0">
+                    <p className="text-xs text-notion-textLight">{title}</p>
+                    <p className="text-base font-medium text-notion-text truncate">{value}</p>
+                </div>
             </div>
-            <span className="text-lg font-semibold text-notion-text">{value}</span>
         </div>
     );
 }
