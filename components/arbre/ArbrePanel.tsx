@@ -1,9 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, Loader2 } from '@/components/icons';
-import { CalendarEvent } from '@/types';
-import { useTreeAnalysis } from '@/hooks/use-tree-analysis';
+import { X, Loader2, TreeDeciduous } from '@/components/icons';
+import { useTreeData } from '@/hooks/use-tree-data';
 import { TreeItem } from './TreeItem';
 import { EmptyState } from './EmptyState';
 import { Z_INDEX, DURATIONS } from '@/lib/constants/ui-constants';
@@ -11,15 +10,14 @@ import { Z_INDEX, DURATIONS } from '@/lib/constants/ui-constants';
 interface ArbrePanelProps {
   isOpen: boolean;
   onClose: () => void;
-  events: CalendarEvent[];
 }
 
 /**
  * Composant principal pour afficher les arbres de préparation
  */
-export function ArbrePanel({ isOpen, onClose, events }: ArbrePanelProps) {
+export function ArbrePanel({ isOpen, onClose }: ArbrePanelProps) {
   const [isVisible, setIsVisible] = useState(false);
-  const { trees, isLoading, error, refetch } = useTreeAnalysis({ isOpen, events });
+  const { trees, isLoading, error, refetch } = useTreeData({ isOpen });
 
   useEffect(() => {
     if (isOpen) {
@@ -41,7 +39,7 @@ export function ArbrePanel({ isOpen, onClose, events }: ArbrePanelProps) {
       {/* Backdrop */}
       <div
         className={`fixed inset-0 bg-black/50 transition-opacity`}
-        style={{ 
+        style={{
           zIndex: Z_INDEX.modalOverlay,
           transitionDuration: `${DURATIONS.animation}ms`,
           opacity: isVisible ? 1 : 0
@@ -52,17 +50,21 @@ export function ArbrePanel({ isOpen, onClose, events }: ArbrePanelProps) {
       {/* Centered Modal */}
       <div className="fixed inset-0 flex items-center justify-center p-4 pointer-events-none" style={{ zIndex: Z_INDEX.modal }}>
         <div
-          className={`w-full max-w-3xl max-h-[85vh] bg-notion-bg rounded-xl shadow-2xl pointer-events-auto transition-all duration-300 ease-out flex flex-col ${
-            isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
-          }`}
+          className={`w-full max-w-3xl max-h-[85vh] bg-notion-bg rounded-xl shadow-2xl pointer-events-auto transition-all duration-300 ease-out flex flex-col ${isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
+            }`}
         >
           {/* Header */}
           <div className="bg-notion-bg border-b border-notion-border px-6 py-4 flex items-center justify-between rounded-t-xl flex-shrink-0">
-            <div>
-              <h2 className="text-xl font-semibold text-notion-text">Arbre de préparation</h2>
-              <p className="text-sm text-notion-textLight mt-0.5">
-                Visualisez vos événements de préparation vers vos objectifs
-              </p>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-notion-green/15 rounded-lg flex items-center justify-center">
+                <TreeDeciduous className="w-5 h-5 text-notion-green" />
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold text-notion-text">Arbres de préparation</h2>
+                <p className="text-sm text-notion-textLight mt-0.5">
+                  Visualisez vos parcours vers vos objectifs
+                </p>
+              </div>
             </div>
             <button
               onClick={handleClose}
@@ -77,7 +79,7 @@ export function ArbrePanel({ isOpen, onClose, events }: ArbrePanelProps) {
             {isLoading ? (
               <div className="text-center py-12 text-notion-textLight">
                 <Loader2 className="w-8 h-8 mx-auto mb-4 animate-spin" />
-                <p className="text-sm">Analyse des événements en cours...</p>
+                <p className="text-sm">Chargement des arbres...</p>
               </div>
             ) : error ? (
               <div className="text-center py-12 text-notion-red">
@@ -92,7 +94,7 @@ export function ArbrePanel({ isOpen, onClose, events }: ArbrePanelProps) {
             ) : trees.length === 0 ? (
               <EmptyState onRetry={refetch} />
             ) : (
-              <div className="space-y-8">
+              <div className="space-y-6">
                 {trees.map((tree) => (
                   <TreeItem key={tree.id} tree={tree} />
                 ))}
@@ -103,7 +105,7 @@ export function ArbrePanel({ isOpen, onClose, events }: ArbrePanelProps) {
           {/* Footer */}
           <div className="border-t border-notion-border px-6 py-4 flex-shrink-0">
             <p className="text-xs text-notion-textLight text-center">
-              Les arbres sont détectés automatiquement à partir des annotations dans vos événements
+              Les arbres sont créés automatiquement quand vous planifiez des révisions vers un objectif
             </p>
           </div>
         </div>
@@ -111,3 +113,4 @@ export function ArbrePanel({ isOpen, onClose, events }: ArbrePanelProps) {
     </>
   );
 }
+

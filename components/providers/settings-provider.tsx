@@ -22,6 +22,12 @@ export interface UserSettings {
   defaultView: 'month' | 'week' | 'day';
   timeFormat: '12h' | '24h';
   showWeekNumbers: boolean;
+
+  // Agent
+  requireEventConfirmation: boolean;
+
+  // Voice
+  voiceAutoStop: boolean;
 }
 
 interface SettingsContextType {
@@ -42,6 +48,8 @@ const defaultSettings: UserSettings = {
   defaultView: 'month',
   timeFormat: '24h',
   showWeekNumbers: false,
+  requireEventConfirmation: true,
+  voiceAutoStop: false, // Le micro reste actif pour plusieurs demandes
 };
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
@@ -79,8 +87,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   // Apply accent color as CSS variable
   useEffect(() => {
     if (isLoaded) {
-      const effectiveTheme = settings.theme === 'system' 
-        ? ThemeManager.getSystemTheme() 
+      const effectiveTheme = settings.theme === 'system'
+        ? ThemeManager.getSystemTheme()
         : settings.theme;
       AccentColorManager.applyAccentColor(settings.accentColor, effectiveTheme);
     }
@@ -108,8 +116,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
 
       // Apply accent color immediately when it changes
       if (key === 'accentColor' && typeof value === 'string') {
-        const effectiveTheme = prev.theme === 'system' 
-          ? ThemeManager.getSystemTheme() 
+        const effectiveTheme = prev.theme === 'system'
+          ? ThemeManager.getSystemTheme()
           : prev.theme;
         AccentColorManager.applyAccentColor(value, effectiveTheme);
       }

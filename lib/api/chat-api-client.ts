@@ -1,9 +1,10 @@
-import { ChatMessage } from '@/types';
+import { ChatMessage, PendingEventResponse, Rule } from '@/types';
 
 export interface ChatApiResponse {
   message: string;
   events: any[];
-  action: 'create' | 'delete' | 'search' | 'none';
+  action: 'create' | 'delete' | 'search' | 'none' | 'pending';
+  pendingEvent?: PendingEventResponse;
   metadata?: {
     responseTime?: number;
     toolCalls?: number;
@@ -20,18 +21,27 @@ export interface ChatApiError {
 /**
  * Envoie un message au chat API et retourne la réponse
  * @param messages Liste des messages à envoyer
+ * @param options Options supplémentaires (requireConfirmation, rules)
  * @returns Réponse de l'API avec message, events, action
  * @throws Erreur si l'appel API échoue ou si reauth est requis
  */
 export async function sendChatMessage(
-  messages: Array<{ role: 'user' | 'assistant'; content: string }>
+  messages: Array<{ role: 'user' | 'assistant'; content: string }>,
+  options?: {
+    requireConfirmation?: boolean;
+    rules?: Rule[]; // 🆕 Règles utilisateur
+  }
 ): Promise<ChatApiResponse> {
   const response = await fetch('/api/chat', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ messages }),
+    body: JSON.stringify({
+      messages,
+      requireConfirmation: options?.requireConfirmation ?? true,
+      rules: options?.rules || [], // 🆕 Passer les règles
+    }),
   });
 
   if (!response.ok) {
