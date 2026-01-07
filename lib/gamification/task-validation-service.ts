@@ -2,7 +2,9 @@ import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/utils/logger';
 import { addXP } from './progress-service';
 import { checkAndUpdateStreak } from './streak-manager';
+import { processEventForSkills } from './skill-matcher';
 import { XP_REWARDS } from './config/xp-config';
+import { updateQuestProgress } from './quest-service';
 import { subDays, startOfDay } from 'date-fns';
 
 export interface TaskValidationData {
@@ -157,6 +159,16 @@ export async function validateTask(
       timeout: 10000, // 10 secondes pour les tests
     }
   );
+
+  // Après la transaction, attribuer XP aux compétences (hors transaction car non critique)
+  if (completed) {
+    // Estimer la durée à 60 min par défaut si on ne l'a pas
+    const duration = 60;
+    const matches = await processEventForSkills(userId, validation.eventTitle, duration);
+
+    // Mettre à jour la progression des quêtes
+    await updateQuestProgress(userId, matches, duration);
+  }
 
   logger.debug(
     `[task-validation-service] Tâche ${completed ? 'validée' : 'invalidée'} pour validationId: ${validationId}`

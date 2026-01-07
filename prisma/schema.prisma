@@ -5,7 +5,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -32,6 +32,7 @@ model User {
   conversations    Conversation[]
   preparationTrees PreparationTree[]
   agentMemories    AgentMemory[]
+  quests           Quest[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -482,4 +483,32 @@ model AgentMemory {
   @@index([userId])
   @@index([memoryType])
   @@index([expiresAt])
+}
+
+// ============================================
+// QUETES
+// ============================================
+
+model Quest {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  title       String
+  description String
+  xpReward    Int
+  
+  progress    Int      @default(0)
+  total       Int
+  
+  type        String   // "DAILY" | "WEEKLY"
+  status      String   @default("PENDING") // "PENDING" | "COMPLETED"
+  
+  skillId     String?  // ID optionnel pour lier à une compétence (ex: nom de la matière)
+  
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
 }

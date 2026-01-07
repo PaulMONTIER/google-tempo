@@ -21,17 +21,28 @@ interface OnboardingData {
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
     }
 
     const data: OnboardingData = await request.json();
-    
+
     console.log('📝 Onboarding data reçu:', JSON.stringify(data, null, 2));
 
+    // Normaliser les données avec valeurs par défaut
+    const normalizedData = {
+      priorityActivities: data.priorityActivities || [],
+      studySubjects: data.studySubjects || [],
+      sportDiscipline: data.sportDiscipline || null,
+      targetSoftSkills: data.targetSoftSkills || [],
+      dailyNotificationTime: data.dailyNotificationTime || '08:00',
+      messageTone: data.messageTone || 'supportive',
+      sportIntegrations: data.sportIntegrations || [],
+    };
+
     // Validation basique - plus souple pour le debug
-    if (!data.priorityActivities || data.priorityActivities.length === 0) {
+    if (!normalizedData.priorityActivities || normalizedData.priorityActivities.length === 0) {
       console.log('❌ Validation échouée: priorityActivities vide');
       return NextResponse.json(
         { error: 'Au moins une activité prioritaire est requise' },
@@ -40,7 +51,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validation soft skills - on accepte 0-3 pour être plus flexible
-    if (data.targetSoftSkills && data.targetSoftSkills.length > 3) {
+    if (normalizedData.targetSoftSkills && normalizedData.targetSoftSkills.length > 3) {
       console.log('❌ Validation échouée: trop de soft skills');
       return NextResponse.json(
         { error: 'Maximum 3 savoirs-être autorisés' },
@@ -55,22 +66,22 @@ export async function POST(request: NextRequest) {
         where: { userId: session.user.id },
         create: {
           userId: session.user.id,
-          priorityActivities: data.priorityActivities,
-          studySubjects: data.studySubjects,
-          sportDiscipline: data.sportDiscipline,
-          targetSoftSkills: data.targetSoftSkills,
-          dailyNotificationTime: data.dailyNotificationTime,
-          messageTone: data.messageTone,
-          sportIntegrations: data.sportIntegrations,
+          priorityActivities: normalizedData.priorityActivities,
+          studySubjects: normalizedData.studySubjects,
+          sportDiscipline: normalizedData.sportDiscipline,
+          targetSoftSkills: normalizedData.targetSoftSkills,
+          dailyNotificationTime: normalizedData.dailyNotificationTime,
+          messageTone: normalizedData.messageTone,
+          sportIntegrations: normalizedData.sportIntegrations,
         },
         update: {
-          priorityActivities: data.priorityActivities,
-          studySubjects: data.studySubjects,
-          sportDiscipline: data.sportDiscipline,
-          targetSoftSkills: data.targetSoftSkills,
-          dailyNotificationTime: data.dailyNotificationTime,
-          messageTone: data.messageTone,
-          sportIntegrations: data.sportIntegrations,
+          priorityActivities: normalizedData.priorityActivities,
+          studySubjects: normalizedData.studySubjects,
+          sportDiscipline: normalizedData.sportDiscipline,
+          targetSoftSkills: normalizedData.targetSoftSkills,
+          dailyNotificationTime: normalizedData.dailyNotificationTime,
+          messageTone: normalizedData.messageTone,
+          sportIntegrations: normalizedData.sportIntegrations,
         },
       });
 

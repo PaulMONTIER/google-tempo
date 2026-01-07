@@ -9,53 +9,53 @@ interface SoftSkillsQuestionProps {
 }
 
 const SOFT_SKILLS = [
-  { 
-    id: 'punctuality', 
-    label: 'Ponctualité', 
+  {
+    id: 'punctuality',
+    label: 'Ponctualité',
     icon: '⏰',
-    definition: 'Respecter les horaires et délais fixés pour tes activités' 
+    definition: 'Respecter les horaires et délais fixés pour tes activités'
   },
-  { 
-    id: 'perseverance', 
-    label: 'Persévérance', 
+  {
+    id: 'perseverance',
+    label: 'Persévérance',
     icon: '🏔️',
-    definition: 'Maintenir tes efforts malgré les difficultés rencontrées' 
+    definition: 'Maintenir tes efforts malgré les difficultés rencontrées'
   },
-  { 
-    id: 'rigor', 
-    label: 'Rigueur', 
+  {
+    id: 'rigor',
+    label: 'Rigueur',
     icon: '📐',
-    definition: 'Être précis et méthodique dans ton travail quotidien' 
+    definition: 'Être précis et méthodique dans ton travail quotidien'
   },
-  { 
-    id: 'autonomy', 
-    label: 'Autonomie', 
+  {
+    id: 'autonomy',
+    label: 'Autonomie',
     icon: '🦅',
-    definition: 'Travailler de manière indépendante sans supervision constante' 
+    definition: 'Travailler de manière indépendante sans supervision constante'
   },
-  { 
-    id: 'adaptability', 
-    label: 'Adaptabilité', 
+  {
+    id: 'adaptability',
+    label: 'Adaptabilité',
     icon: '🌊',
-    definition: "T'ajuster aux changements et imprévus avec flexibilité" 
+    definition: "T'ajuster aux changements et imprévus avec flexibilité"
   },
-  { 
-    id: 'organization', 
-    label: 'Organisation', 
+  {
+    id: 'organization',
+    label: 'Organisation',
     icon: '📋',
-    definition: 'Structurer ton travail et ton temps efficacement' 
+    definition: 'Structurer ton travail et ton temps efficacement'
   },
-  { 
-    id: 'teamwork', 
-    label: 'Travail en équipe', 
+  {
+    id: 'teamwork',
+    label: 'Travail en équipe',
     icon: '🤝',
-    definition: 'Collaborer efficacement avec les autres' 
+    definition: 'Collaborer efficacement avec les autres'
   },
-  { 
-    id: 'stress_management', 
-    label: 'Gestion du stress', 
+  {
+    id: 'stress_management',
+    label: 'Gestion du stress',
     icon: '🧘',
-    definition: 'Rester calme et efficace sous pression' 
+    definition: 'Rester calme et efficace sous pression'
   },
 ];
 
@@ -81,28 +81,36 @@ export function SoftSkillsQuestion({ selected, onChange }: SoftSkillsQuestionPro
         </p>
       </div>
 
-      {/* Info bulle pour le skill survolé */}
-      {hoveredSkill && (
-        <div className="p-4 rounded-xl bg-notion-blue/5 border border-notion-blue/20 animate-fade-in">
-          <div className="flex items-start gap-2">
-            <Info className="w-5 h-5 text-notion-blue flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="font-medium text-notion-text">
-                {SOFT_SKILLS.find(s => s.id === hoveredSkill)?.label}
-              </p>
-              <p className="text-sm text-notion-textLight">
-                {SOFT_SKILLS.find(s => s.id === hoveredSkill)?.definition}
-              </p>
+      {/* Info bulle pour le skill survolé - hauteur fixe pour éviter le saut */}
+      <div className="h-20 mb-2">
+        {hoveredSkill ? (
+          <div className="p-4 rounded-xl bg-notion-blue/5 border border-notion-blue/20">
+            <div className="flex items-start gap-2">
+              <Info className="w-5 h-5 text-notion-blue flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-medium text-notion-text">
+                  {SOFT_SKILLS.find(s => s.id === hoveredSkill)?.label}
+                </p>
+                <p className="text-sm text-notion-textLight">
+                  {SOFT_SKILLS.find(s => s.id === hoveredSkill)?.definition}
+                </p>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        ) : (
+          <div className="p-4 rounded-xl bg-notion-sidebar/30 border border-transparent">
+            <p className="text-sm text-notion-textLight text-center">
+              Survole un savoir-être pour voir sa définition
+            </p>
+          </div>
+        )}
+      </div>
 
       <div className="grid grid-cols-2 gap-3">
         {SOFT_SKILLS.map((skill) => {
           const isSelected = selected.includes(skill.id);
           const isDisabled = selected.length >= 3 && !isSelected;
-          
+
           return (
             <button
               key={skill.id}
@@ -111,8 +119,8 @@ export function SoftSkillsQuestion({ selected, onChange }: SoftSkillsQuestionPro
               onMouseLeave={() => setHoveredSkill(null)}
               disabled={isDisabled}
               className={`p-4 rounded-xl border-2 transition-all duration-200 text-left
-                ${isSelected 
-                  ? 'border-notion-blue bg-notion-blue/5' 
+                ${isSelected
+                  ? 'border-notion-blue bg-notion-blue/5'
                   : isDisabled
                     ? 'border-notion-border opacity-40 cursor-not-allowed'
                     : 'border-notion-border hover:border-notion-blue/50 hover:bg-notion-hover'
@@ -139,8 +147,8 @@ export function SoftSkillsQuestion({ selected, onChange }: SoftSkillsQuestionPro
           <div
             key={num}
             className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all
-              ${selected.length >= num 
-                ? 'bg-notion-blue text-white' 
+              ${selected.length >= num
+                ? 'bg-notion-blue text-white'
                 : 'bg-notion-hover text-notion-textLight'
               }`}
           >
