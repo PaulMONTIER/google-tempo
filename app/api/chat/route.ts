@@ -10,6 +10,7 @@ import { Rule } from "@/types";
 
 export async function POST(req: NextRequest) {
   const startTime = Date.now();
+  console.log('🚨 [API /chat] REQUEST RECEIVED');
 
   try {
     // Validation de la session
@@ -51,7 +52,16 @@ export async function POST(req: NextRequest) {
     );
 
     // Exécution de l'agent (import dynamique pour éviter les cycles au build)
+    logger.debug('[API /chat] Dynamically importing agent graph...');
     const { getAgentExecutor } = await import("@/lib/agent/graph");
+
+    logger.debug('[API /chat] Getting agent executor...');
+    const agentExecutor = getAgentExecutor();
+
+    if (!agentExecutor) {
+      throw new Error("Failed to initialize agent executor");
+    }
+
     const config = {
       configurable: {
         userId,
@@ -60,11 +70,12 @@ export async function POST(req: NextRequest) {
       },
     };
 
-    const agentExecutor = getAgentExecutor();
+    logger.debug('[API /chat] Invoking agent...');
     const result = await agentExecutor.invoke(
       { messages: formattedMessages },
       config
     );
+    logger.debug('[API /chat] Agent invocation successful');
 
     const finalMessages = result.messages;
     const lastMessage = finalMessages[finalMessages.length - 1];

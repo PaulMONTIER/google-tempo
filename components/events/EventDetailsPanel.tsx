@@ -11,10 +11,11 @@ import { Z_INDEX, DURATIONS } from '@/lib/constants/ui-constants';
 interface EventDetailsPanelProps {
   event: CalendarEvent | null;
   onClose: () => void;
-  allEvents?: CalendarEvent[]; // Liste complète des événements pour construire l'arbre
+  allEvents?: CalendarEvent[];
+  onEdit?: (event: CalendarEvent) => void;
 }
 
-export function EventDetailsPanel({ event, onClose, allEvents = [] }: EventDetailsPanelProps) {
+export function EventDetailsPanel({ event, onClose, allEvents = [], onEdit }: EventDetailsPanelProps) {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -37,8 +38,8 @@ export function EventDetailsPanel({ event, onClose, allEvents = [] }: EventDetai
       {/* Backdrop */}
       <div
         className={`fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity`}
-        style={{ 
-          zIndex: Z_INDEX.modalOverlay, 
+        style={{
+          zIndex: Z_INDEX.modalOverlay,
           transitionDuration: `${DURATIONS.animation}ms`,
           opacity: isVisible ? 1 : 0
         }}
@@ -48,16 +49,15 @@ export function EventDetailsPanel({ event, onClose, allEvents = [] }: EventDetai
       {/* Modal centré */}
       <div
         className={`fixed inset-0 flex items-center justify-center p-4 transition-all`}
-        style={{ 
-          zIndex: Z_INDEX.modal, 
+        style={{
+          zIndex: Z_INDEX.modal,
           transitionDuration: `${DURATIONS.animation}ms`,
           opacity: isVisible ? 1 : 0
         }}
       >
         <div
-          className={`bg-notion-bg rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col transition-all ${
-            isVisible ? 'scale-100 translate-y-0' : 'scale-95 translate-y-4'
-          }`}
+          className={`bg-notion-bg rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col transition-all ${isVisible ? 'scale-100 translate-y-0' : 'scale-95 translate-y-4'
+            }`}
           onClick={(e) => e.stopPropagation()}
           style={{
             boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
@@ -110,7 +110,9 @@ export function EventDetailsPanel({ event, onClose, allEvents = [] }: EventDetai
               Fermer
             </button>
             <button
-              className="flex-1 px-6 py-3 bg-notion-blue rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90 hover:scale-[1.02] active:scale-[0.98] shadow-lg"
+              className="flex-1 px-6 py-3 bg-notion-blue rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90 hover:scale-[1.02] active:scale-[0.98] shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={() => onEdit?.(event)}
+              disabled={!onEdit}
             >
               Modifier l'événement
             </button>

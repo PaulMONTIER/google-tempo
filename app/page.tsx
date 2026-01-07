@@ -11,7 +11,8 @@ import { ProgressionPanel } from '@/components/progression/ProgressionPanel';
 import { AuthGate } from '@/components/layout/AuthGate';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { MainLayout } from '@/components/layout/MainLayout';
-import { EventEditModal } from '@/components/chat/EventEditModal';
+import { EventEditModal } from '@/components/chat/EventEditModal'; // Pour le chat
+import { ManualEventEditModal } from '@/components/events/ManualEventEditModal'; // Pour l'édition manuelle
 import { useCalendarEvents } from '@/hooks/use-calendar-events';
 import { useChatMessages } from '@/hooks/use-chat-messages';
 import { usePanelState } from '@/hooks/use-panel-state';
@@ -25,6 +26,7 @@ export default function Home() {
 
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+  const [manualEditingEvent, setManualEditingEvent] = useState<CalendarEvent | null>(null);
 
   // Hooks pour gérer les données et états
   const { events, refreshEvents } = useCalendarEvents(isAuthenticated);
@@ -33,13 +35,13 @@ export default function Home() {
     sendMessage,
     isLoading,
     clearMessages,
-    // 🆕 Exports pour la confirmation
+    // Exports pour la confirmation
     pendingEvent,
     isConfirming,
     confirmEvent,
     modifyEvent,
     rejectEvent,
-    // 🆕 Exports pour l'édition
+    // Exports pour l'édition (Chat)
     isEditingEvent,
     cancelModify,
     confirmWithModification,
@@ -72,6 +74,18 @@ export default function Home() {
     });
     sendMessage(`Afficher les événements du ${dateStr}`);
   }, [sendMessage]);
+
+  // Handler pour lancer l'édition manuelle depuis le panneau de détails
+  const handleEditEvent = useCallback((event: CalendarEvent) => {
+    setSelectedEvent(null);
+    setManualEditingEvent(event);
+  }, []);
+
+  // Handler appelé après une modification manuelle réussie
+  const handleManualEditSuccess = useCallback(() => {
+    refreshEvents();
+    setManualEditingEvent(null);
+  }, [refreshEvents]);
 
   // Si non authentifié, afficher l'écran de connexion
   if (!isAuthenticated) {
@@ -114,9 +128,24 @@ export default function Home() {
       <ArbrePanel isOpen={panelState.isArbreOpen} onClose={() => panelState.setIsArbreOpen(false)} />
       <ProgressionPanel isOpen={panelState.isProgressionOpen} onClose={() => panelState.setIsProgressionOpen(false)} />
       <NotificationPanel isOpen={panelState.isNotificationPanelOpen} onClose={() => panelState.setIsNotificationPanelOpen(false)} />
-      <EventDetailsPanel event={selectedEvent} onClose={() => setSelectedEvent(null)} allEvents={events} />
 
-      {/* 🆕 Modal d'édition d'événement */}
+      <EventDetailsPanel
+        event={selectedEvent}
+        onClose={() => setSelectedEvent(null)}
+        allEvents={events}
+        onEdit={handleEditEvent}
+      />
+
+      {/* Modal d'édition manuelle */}
+      {manualEditingEvent && (
+        <ManualEventEditModal
+          event={manualEditingEvent}
+          onClose={() => setManualEditingEvent(null)}
+          onSaveSuccess={handleManualEditSuccess}
+        />
+      )}
+
+      {/* Modal d'édition d'événement (Chat - existant) */}
       {isEditingEvent && pendingEvent && (
         <EventEditModal
           pendingEvent={pendingEvent}
