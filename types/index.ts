@@ -13,6 +13,7 @@ export interface CalendarEvent {
   status?: 'pending' | 'in-progress' | 'completed'; // Statut de progression
   eventType?: 'main' | 'preparation' | 'subtask'; // Type d'événement
   order?: number; // Ordre dans la séquence
+  extendedProps?: any; // Métadonnées supplémentaires (ex: ressources suggérées)
 }
 
 export interface Reminder {

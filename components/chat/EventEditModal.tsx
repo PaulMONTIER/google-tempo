@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { PendingEvent, PendingEventResponse } from '@/types';
-import { Calendar, Clock, MapPin, AlignLeft, X, Check, Loader2 } from '@/components/icons';
+import { Calendar, Clock, MapPin, AlignLeft, X, Check, Loader2 } from '@/components/ui/icons';
 import { Z_INDEX, DURATIONS } from '@/lib/constants/ui-constants';
 
 interface EventEditModalProps {

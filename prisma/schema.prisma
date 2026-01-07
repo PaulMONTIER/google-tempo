@@ -5,7 +5,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -22,14 +22,54 @@ model User {
   googleRefreshToken String?
   googleTokenExpiry  DateTime?
 
+  // Onboarding
+  onboardingCompleted Boolean   @default(false)
+  onboardingStep      Int       @default(0) // 0 = pas commencé, 1-7 = étapes, 8 = terminé
+  preferences         UserPreferences?
+
   // Relations gamification
   userProgress     UserProgress?
   conversations    Conversation[]
   preparationTrees PreparationTree[]
   agentMemories    AgentMemory[]
+  quests           Quest[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// ============================================
+// PRÉFÉRENCES UTILISATEUR (ONBOARDING)
+// ============================================
+
+model UserPreferences {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Activités prioritaires (multi-select)
+  priorityActivities String[] // ['studies', 'sport', 'pro', 'personal']
+  studySubjects      String[] // ['Mathématiques', 'Physique', ...]
+  sportDiscipline    String?  // 'running', 'cycling', etc.
+
+  // Savoirs-être (3 choix parmi la liste France Travail)
+  targetSoftSkills String[] // ['punctuality', 'perseverance', 'rigor', ...]
+
+  // Notifications
+  dailyNotificationTime String @default("08:00")
+  messageTone           String @default("supportive") // 'supportive' | 'pepTalk' | 'lightTrashTalk'
+
+  // Intégrations sport (optionnel)
+  sportIntegrations String[] // ['strava', 'garmin', ...]
+
+  // Consentement contenu promotionnel/adapté
+  acceptPromotionalContent Boolean @default(false)
+  acceptPersonalizedOffers Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
 }
 
 model Account {
@@ -79,9 +119,16 @@ model UserProgress {
   userId String @unique
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // XP & Niveaux
+  // XP & Niveaux (gamification)
   xp    Int @default(0)
   level Int @default(1)
+
+  // Points par domaine (analyse rétroactive)
+  totalPoints   Int @default(0)
+  currentLevel  Int @default(1)
+  studiesPoints Int @default(0)
+  sportPoints   Int @default(0)
+  proPoints     Int @default(0)
 
   // Streaks événementiels
   currentStreak           Int       @default(0)
@@ -93,6 +140,11 @@ model UserProgress {
   totalTasksCreated     Int @default(0)
   totalTasksCompleted   Int @default(0)
   totalQuizzesCompleted Int @default(0)
+  eventsCompleted       Int @default(0)
+
+  // Analyse rétroactive
+  retroactiveAnalysisDone Boolean   @default(false)
+  retroactiveAnalysisDate DateTime?
 
   // Relations
   skillProgress   UserSkillProgress[]
@@ -431,4 +483,32 @@ model AgentMemory {
   @@index([userId])
   @@index([memoryType])
   @@index([expiresAt])
+}
+
+// ============================================
+// QUETES
+// ============================================
+
+model Quest {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  title       String
+  description String
+  xpReward    Int
+  
+  progress    Int      @default(0)
+  total       Int
+  
+  type        String   // "DAILY" | "WEEKLY"
+  status      String   @default("PENDING") // "PENDING" | "COMPLETED"
+  
+  skillId     String?  // ID optionnel pour lier à une compétence (ex: nom de la matière)
+  
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
 }

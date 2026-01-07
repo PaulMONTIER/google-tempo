@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { CheckCircle, X, XCircle } from '@/components/icons';
+import { CheckCircle, X, XCircle } from '@/components/ui/icons';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import type { TaskValidationData } from '@/lib/gamification/task-validation-service';

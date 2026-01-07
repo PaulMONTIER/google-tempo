@@ -1,6 +1,6 @@
 'use client';
 
-import { Moon, Sun, Palette, Globe, Eye } from '@/components/icons';
+import { Moon, Sun, Palette, Globe, Eye } from '@/components/ui/icons';
 import { Section } from '../components/Section';
 import type { UserSettings } from '@/components/providers/settings-provider';
 

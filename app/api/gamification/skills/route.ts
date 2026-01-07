@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAppSession } from '@/lib/api/session-service';
 import { validateSession } from '@/lib/api/validators/session-validator';
-import { getUserSkills, getSkillFamilyDetails } from '@/lib/gamification/skill-service';
+import { getUserSkillsFromProfile } from '@/lib/gamification/profile-skills-service';
+import { getSkillFamilyDetails } from '@/lib/gamification/skill-service';
 import { handleApiError } from '@/lib/api/error-handler';
 import { logger } from '@/lib/utils/logger';
 
 /**
  * GET /api/gamification/skills
- * Récupère toutes les compétences de l'utilisateur
+ * Récupère les compétences DYNAMIQUES basées sur les matières du profil
  * Query params:
  *   - familyId?: string - Si fourni, retourne uniquement les détails de cette famille
  */
@@ -46,8 +47,8 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // Récupérer toutes les compétences
-    const skills = await getUserSkills(userId);
+    // Récupérer les compétences DEPUIS LE PROFIL (plus de hardcoding)
+    const skills = await getUserSkillsFromProfile(userId);
 
     return NextResponse.json({
       success: true,
@@ -58,4 +59,3 @@ export async function GET(req: NextRequest) {
     return handleApiError(error, 'gamification-skills');
   }
 }
-

@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { CalendarEvent, ViewMode } from '@/types';
 import { MonthView } from './MonthView';
 import { WeekView } from './WeekView';
 import { DayView } from './DayView';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from '@/components/icons';
+import { AgendaView } from './AgendaView';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, List } from '@/components/ui/icons';
 import { addMonths, addWeeks, addDays, subMonths, subWeeks, subDays, format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useSettings } from '@/components/providers/settings-provider';
@@ -20,6 +21,9 @@ export function Calendar({ events, onEventClick, onDayClick }: CalendarProps) {
   const { settings, isLoaded } = useSettings();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<ViewMode>('month');
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [slideDirection, setSlideDirection] = useState<'left' | 'right' | 'none'>('none');
+  const viewContainerRef = useRef<HTMLDivElement>(null);
 
   // Set initial view mode from settings when loaded
   useEffect(() => {
@@ -28,7 +32,18 @@ export function Calendar({ events, onEventClick, onDayClick }: CalendarProps) {
     }
   }, [isLoaded, settings.defaultView]);
 
+  // Animer les transitions de date
+  const animateTransition = (direction: 'left' | 'right') => {
+    setSlideDirection(direction);
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setIsTransitioning(false);
+      setSlideDirection('none');
+    }, 200);
+  };
+
   const handlePrevious = () => {
+    animateTransition('right');
     switch (viewMode) {
       case 'month':
         setCurrentDate(subMonths(currentDate, 1));
@@ -37,12 +52,14 @@ export function Calendar({ events, onEventClick, onDayClick }: CalendarProps) {
         setCurrentDate(subWeeks(currentDate, 1));
         break;
       case 'day':
+      case 'agenda':
         setCurrentDate(subDays(currentDate, 1));
         break;
     }
   };
 
   const handleNext = () => {
+    animateTransition('left');
     switch (viewMode) {
       case 'month':
         setCurrentDate(addMonths(currentDate, 1));
@@ -51,13 +68,18 @@ export function Calendar({ events, onEventClick, onDayClick }: CalendarProps) {
         setCurrentDate(addWeeks(currentDate, 1));
         break;
       case 'day':
+      case 'agenda':
         setCurrentDate(addDays(currentDate, 1));
         break;
     }
   };
 
   const handleToday = () => {
-    setCurrentDate(new Date());
+    const today = new Date();
+    if (currentDate.toDateString() !== today.toDateString()) {
+      animateTransition(currentDate > today ? 'right' : 'left');
+    }
+    setCurrentDate(today);
   };
 
   const getTitle = () => {
@@ -68,7 +90,17 @@ export function Calendar({ events, onEventClick, onDayClick }: CalendarProps) {
         return `Semaine du ${format(currentDate, 'd MMMM yyyy', { locale: fr })}`;
       case 'day':
         return format(currentDate, 'd MMMM yyyy', { locale: fr });
+      case 'agenda':
+        return `À partir du ${format(currentDate, 'd MMMM', { locale: fr })}`;
     }
+  };
+
+  // Classes pour l'animation
+  const getTransitionClasses = () => {
+    if (!isTransitioning) return 'opacity-100 translate-x-0';
+    if (slideDirection === 'left') return 'opacity-0 -translate-x-4';
+    if (slideDirection === 'right') return 'opacity-0 translate-x-4';
+    return '';
   };
 
   return (
@@ -134,12 +166,27 @@ export function Calendar({ events, onEventClick, onDayClick }: CalendarProps) {
             >
               Jour
             </button>
+            <button
+              onClick={() => setViewMode('agenda')}
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-all flex items-center gap-1.5 ${
+                viewMode === 'agenda'
+                  ? 'bg-notion-bg text-notion-text shadow-sm'
+                  : 'text-notion-textLight hover:text-notion-text'
+              }`}
+            >
+              <List className="w-4 h-4" />
+              Liste
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Calendar view */}
-      <div className="relative" style={{flex: 1, minHeight: 0, maxHeight: '100%', overflow: 'hidden'}}>
+      {/* Calendar view with transitions */}
+      <div 
+        ref={viewContainerRef}
+        className={`relative transition-all duration-200 ease-out ${getTransitionClasses()}`} 
+        style={{flex: 1, minHeight: 0, maxHeight: '100%', overflow: 'hidden'}}
+      >
         {viewMode === 'month' && (
           <div style={{position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, overflow: 'hidden'}}>
             <MonthView
@@ -167,6 +214,16 @@ export function Calendar({ events, onEventClick, onDayClick }: CalendarProps) {
         {viewMode === 'day' && (
           <div style={{position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, overflow: 'hidden'}}>
             <DayView
+              currentDate={currentDate}
+              events={events}
+              onEventClick={onEventClick}
+              timeFormat={settings.timeFormat}
+            />
+          </div>
+        )}
+        {viewMode === 'agenda' && (
+          <div style={{position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, overflow: 'hidden'}}>
+            <AgendaView
               currentDate={currentDate}
               events={events}
               onEventClick={onEventClick}

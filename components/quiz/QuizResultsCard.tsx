@@ -1,6 +1,6 @@
 'use client';
 
-import { Award, CheckCircle, XCircle } from '@/components/icons';
+import { Award, CheckCircle, XCircle } from '@/components/ui/icons';
 import type { QuizData } from '@/lib/gamification/quiz-service';
 
 interface QuizResultsCardProps {

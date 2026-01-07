@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { SkillFamilyData } from '@/lib/gamification/skill-service';
+import type { UserSkillData } from '@/lib/gamification/profile-skills-service';
 
 export function useSkills() {
-  const [skills, setSkills] = useState<SkillFamilyData[]>([]);
+  const [skills, setSkills] = useState<UserSkillData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -24,8 +24,9 @@ export function useSkills() {
       } else {
         throw new Error(data.error || 'Données invalides');
       }
-    } catch (err: any) {
-      setError(err.message || 'Erreur inconnue');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Erreur inconnue';
+      setError(message);
       console.error('Erreur useSkills:', err);
     } finally {
       setIsLoading(false);
@@ -43,11 +44,11 @@ export function useSkills() {
       const data = await response.json();
 
       if (data.success && data.data) {
-        return data.data as SkillFamilyData;
+        return data.data as UserSkillData;
       } else {
         throw new Error(data.error || 'Données invalides');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Erreur fetchFamilyDetails:', err);
       throw err;
     }

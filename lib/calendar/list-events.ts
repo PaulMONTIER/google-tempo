@@ -38,6 +38,7 @@ export async function listCalendarEvents(
       location: event.location || "",
       htmlLink: event.htmlLink || "",
       color: undefined,
+      extendedProps: event.extendedProperties?.private || {},
     }));
   } catch (error) {
     console.error("❌ Erreur listEvents:", error);

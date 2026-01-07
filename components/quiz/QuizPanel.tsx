@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, ChevronLeft, ChevronRight } from '@/components/icons';
+import { X, ChevronLeft, ChevronRight } from '@/components/ui/icons';
 import { useQuiz } from '@/hooks/use-quiz';
 import { QuizQuestionCard } from './QuizQuestionCard';
 import { QuizResultsCard } from './QuizResultsCard';

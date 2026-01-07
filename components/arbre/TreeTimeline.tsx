@@ -1,6 +1,6 @@
 'use client';
 
-import { CheckCircle, Calendar } from '@/components/icons';
+import { CheckCircle, Calendar } from '@/components/ui/icons';
 import { BranchData } from '@/lib/services/tree-service';
 import { formatDateShort } from '@/lib/utils/date-formatters';
 

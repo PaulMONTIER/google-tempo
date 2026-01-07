@@ -1,6 +1,6 @@
 'use client';
 
-import { Clock, MapPin, Calendar } from '@/components/icons';
+import { Clock, MapPin, Calendar } from '@/components/ui/icons';
 import { CalendarEvent } from '@/types';
 import { formatDateLong, formatTime } from '@/lib/utils/date-formatters';
 

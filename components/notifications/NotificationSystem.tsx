@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, createContext, useContext, ReactNode } from 'react';
+import { useState, createContext, useContext, ReactNode, useCallback } from 'react';
 import type { Notification } from '@/types/notifications';
 import NotificationContainer from './NotificationContainer';
 
@@ -35,7 +35,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [notificationHistory, setNotificationHistory] = useState<(NotificationWithTimestamp & { read: boolean })[]>([]);
 
-  const addNotification = (notification: Omit<NotificationWithTimestamp, 'id' | 'timestamp'>) => {
+  const addNotification = useCallback((notification: Omit<NotificationWithTimestamp, 'id' | 'timestamp'>) => {
     const newNotification: NotificationWithTimestamp = {
       ...notification,
       id: Date.now().toString() + Math.random(),
@@ -53,33 +53,33 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         removeNotification(newNotification.id);
       }, notification.duration);
     }
-  };
+  }, []);
 
-  const removeNotification = (id: string) => {
+  const removeNotification = useCallback((id: string) => {
     setNotifications((prev) => prev.filter((n) => n.id !== id));
-  };
+  }, []);
 
-  const clearAll = () => {
+  const clearAll = useCallback(() => {
     setNotifications([]);
-  };
+  }, []);
 
-  const markAsRead = (id: string) => {
+  const markAsRead = useCallback((id: string) => {
     setNotificationHistory((prev) =>
       prev.map((n) => (n.id === id ? { ...n, read: true } : n))
     );
-  };
+  }, []);
 
-  const markAllAsRead = () => {
+  const markAllAsRead = useCallback(() => {
     setNotificationHistory((prev) => prev.map((n) => ({ ...n, read: true })));
-  };
+  }, []);
 
-  const clearHistory = () => {
+  const clearHistory = useCallback(() => {
     setNotificationHistory([]);
-  };
+  }, []);
 
-  const deleteFromHistory = (id: string) => {
+  const deleteFromHistory = useCallback((id: string) => {
     setNotificationHistory((prev) => prev.filter((n) => n.id !== id));
-  };
+  }, []);
 
   return (
     <NotificationContext.Provider value={{

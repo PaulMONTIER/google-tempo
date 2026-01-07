@@ -2,10 +2,13 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { ChatMessage, PendingEventResponse } from '@/types';
-import { Send, Loader2 } from '@/components/icons';
+import { Send, Loader2 } from '@/components/ui/icons';
 import { EventConfirmationCard } from './EventConfirmationCard';
 import { VoiceButton } from './VoiceButton';
 import { VoiceIndicator } from './VoiceIndicator';
+import { IntegrationMenu, IntegrationType } from './IntegrationMenu';
+import { RevisionProposalCard } from './RevisionProposalCard';
+import { DocumentIngestionModal } from './DocumentIngestionModal';
 import { useVoiceAssistant } from '@/hooks/use-voice-assistant';
 import { useSettings } from '@/components/providers/settings-provider';
 
@@ -18,6 +21,16 @@ interface ChatInterfaceProps {
   onConfirmEvent?: () => Promise<void>;
   onModifyEvent?: () => void;
   onRejectEvent?: (reason?: string) => Promise<void>;
+  // Nouvelles props pour les intégrations
+  onSelectIntegration?: (type: IntegrationType) => void;
+  isIntegrationProcessing?: boolean;
+  processingIntegrationType?: IntegrationType | null;
+  // Revision Flow Props
+  revisionFlowState?: 'idle' | 'proposing' | 'ingesting' | 'generating';
+  revisionEvent?: { title: string; date: string } | null;
+  onAcceptRevision?: () => void;
+  onDeclineRevision?: () => void;
+  onGenerateRevision?: (docs: any[]) => Promise<void>;
 }
 
 export function ChatInterface({
@@ -29,6 +42,14 @@ export function ChatInterface({
   onConfirmEvent,
   onModifyEvent,
   onRejectEvent,
+  onSelectIntegration,
+  isIntegrationProcessing = false,
+  processingIntegrationType = null,
+  revisionFlowState = 'idle',
+  revisionEvent = null,
+  onAcceptRevision,
+  onDeclineRevision,
+  onGenerateRevision,
 }: ChatInterfaceProps) {
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -172,6 +193,25 @@ export function ChatInterface({
           />
         )}
 
+        {/* Proactive Revision Flow */}
+        {revisionFlowState === 'proposing' && revisionEvent && onAcceptRevision && onDeclineRevision && (
+          <RevisionProposalCard
+            eventTitle={revisionEvent.title}
+            eventDate={revisionEvent.date}
+            onAccept={onAcceptRevision}
+            onDecline={onDeclineRevision}
+          />
+        )}
+
+        {revisionFlowState === 'ingesting' && revisionEvent && onGenerateRevision && (
+          <DocumentIngestionModal
+            isOpen={true}
+            onClose={onDeclineRevision!} // Closing modal = declining flow
+            onGenerate={onGenerateRevision}
+            eventTitle={revisionEvent.title}
+          />
+        )}
+
         {isLoading && !voiceSession.isActive && (
           <div className="flex justify-start">
             <div className="bg-notion-sidebar text-notion-text rounded-lg px-4 py-3">
@@ -185,7 +225,16 @@ export function ChatInterface({
 
       {/* Input */}
       <form onSubmit={handleSubmit} className="px-6 py-4 border-t border-notion-border" style={{ flexShrink: 0 }}>
-        <div className="flex gap-3">
+        <div className="flex gap-3 items-center">
+          {/* Bouton + Intégrations */}
+          {onSelectIntegration && (
+            <IntegrationMenu
+              onSelectIntegration={onSelectIntegration}
+              isProcessing={isIntegrationProcessing}
+              processingType={processingIntegrationType}
+              disabled={isLoading || isConfirming || voiceSession.isActive}
+            />
+          )}
           <input
             ref={inputRef}
             type="text"

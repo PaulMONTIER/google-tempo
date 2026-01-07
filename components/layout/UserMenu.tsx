@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Session } from 'next-auth';
 import { signOut } from 'next-auth/react';
-import { Bell } from '@/components/icons';
+import { Bell } from '@/components/ui/icons';
 
 interface UserMenuProps {
   session: Session | null;

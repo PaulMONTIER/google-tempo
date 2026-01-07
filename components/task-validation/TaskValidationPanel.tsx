@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, CheckCircle } from '@/components/icons';
+import { X, CheckCircle } from '@/components/ui/icons';
 import { useTaskValidations } from '@/hooks/use-task-validations';
 import { TaskValidationCard } from './TaskValidationCard';
 import { Z_INDEX, DURATIONS } from '@/lib/constants/ui-constants';

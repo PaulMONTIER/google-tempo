@@ -9,6 +9,7 @@ export function usePanelState() {
   const [isNotificationPanelOpen, setIsNotificationPanelOpen] = useState(false);
   const [isRulesOpen, setIsRulesOpen] = useState(false);
   const [isArbreOpen, setIsArbreOpen] = useState(false);
+  const [isProgressionOpen, setIsProgressionOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -27,23 +28,26 @@ export function usePanelState() {
     // Settings panel
     isSettingsOpen,
     setIsSettingsOpen,
-    
+
     // Notification panel
     isNotificationPanelOpen,
     setIsNotificationPanelOpen,
-    
+
     // Rules panel
     isRulesOpen,
     setIsRulesOpen,
-    
+
     // Arbre panel
     isArbreOpen,
     setIsArbreOpen,
-    
+
+    // Progression panel
+    isProgressionOpen,
+    setIsProgressionOpen,
+
     // Menu
     isMenuOpen,
     setIsMenuOpen,
     menuRef,
   };
 }
-

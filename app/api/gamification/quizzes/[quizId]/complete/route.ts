@@ -11,7 +11,7 @@ import { logger } from '@/lib/utils/logger';
  */
 export async function POST(
   req: NextRequest,
-  { params }: { params: { quizId: string } }
+  { params }: { params: Promise<{ quizId: string }> }
 ) {
   try {
     const session = await getAppSession();
@@ -22,7 +22,7 @@ export async function POST(
     }
 
     const userId = validation.userId;
-    const { quizId } = params;
+    const { quizId } = await params;
 
     logger.debug(`[API /gamification/quizzes/${quizId}/complete] POST pour userId: ${userId}`);
 
@@ -34,7 +34,7 @@ export async function POST(
       message: `Quiz complété ! Score: ${quiz.score}/10`,
     });
   } catch (error: unknown) {
-    logger.error(`[API /gamification/quizzes/${params.quizId}/complete] Erreur POST:`, error);
+    logger.error('[API /gamification/quizzes/[quizId]/complete] Erreur POST:', error);
     return handleApiError(error, 'quiz-complete');
   }
 }

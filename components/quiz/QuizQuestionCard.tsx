@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { CheckCircle, XCircle, AlertCircle } from '@/components/icons';
+import { CheckCircle, XCircle, AlertCircle } from '@/components/ui/icons';
 import type { QuizQuestionData } from '@/lib/gamification/quiz-service';
 
 interface QuizQuestionCardProps {

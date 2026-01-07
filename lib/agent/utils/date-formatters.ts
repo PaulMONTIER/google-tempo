@@ -29,14 +29,17 @@ export function formatCurrentTime(): string {
 
 /**
  * Construit le prompt système dynamique en remplaçant les placeholders
- * @param template Template du prompt avec placeholders {current_date} et {current_time}
+ * @param template Template du prompt avec placeholders {current_date}, {current_time} et {current_year}
  * @param date Date formatée
  * @param time Heure formatée
  * @returns Prompt système avec valeurs remplacées
  */
 export function buildDynamicSystemPrompt(template: string, date: string, time: string): string {
+  const currentYear = new Date().getFullYear().toString();
+  
   return template
-    .replace('{current_date}', date)
-    .replace('{current_time}', time);
+    .replace(/{current_date}/g, date)
+    .replace(/{current_time}/g, time)
+    .replace(/{current_year}/g, currentYear);
 }
 

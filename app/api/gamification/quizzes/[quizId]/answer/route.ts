@@ -12,7 +12,7 @@ import { logger } from '@/lib/utils/logger';
  */
 export async function POST(
   req: NextRequest,
-  { params }: { params: { quizId: string } }
+  { params }: { params: Promise<{ quizId: string }> }
 ) {
   try {
     const session = await getAppSession();
@@ -23,7 +23,7 @@ export async function POST(
     }
 
     const userId = validation.userId;
-    const { quizId } = params;
+    const { quizId } = await params;
     const body = await req.json();
     const { questionId, answerIndex } = body;
 
@@ -58,7 +58,7 @@ export async function POST(
       data: result,
     });
   } catch (error: unknown) {
-    logger.error(`[API /gamification/quizzes/${params.quizId}/answer] Erreur POST:`, error);
+    logger.error('[API /gamification/quizzes/[quizId]/answer] Erreur POST:', error);
     return handleApiError(error, 'quiz-answer');
   }
 }

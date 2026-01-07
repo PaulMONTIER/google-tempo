@@ -1,6 +1,6 @@
 'use client';
 
-import { X } from '@/components/icons';
+import { X } from '@/components/ui/icons';
 
 export interface Reminder {
   id: string;

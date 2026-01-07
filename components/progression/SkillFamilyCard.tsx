@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronRight, ChevronDown } from '@/components/icons';
+import { ChevronRight, ChevronDown } from '@/components/ui/icons';
 import type { SkillFamilyData } from '@/lib/gamification/skill-service';
 import { SkillDetailsModal } from './SkillDetailsModal';
 

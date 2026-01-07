@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, Bell, CheckCircle, AlertCircle, Info, XCircle } from '@/components/icons';
+import { X, Bell, CheckCircle, AlertCircle, Info, XCircle } from '@/components/ui/icons';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useNotifications } from './NotificationSystem';

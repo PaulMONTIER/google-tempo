@@ -1,24 +1,25 @@
-import { PrismaClient } from '@prisma/client';
 import { addXP, getProgressStats } from '@/lib/gamification/progress-service';
 import { XP_REWARDS } from '@/lib/gamification/config/xp-config';
+import { getPrismaForTests } from './setup';
 
-const prisma = new PrismaClient();
+let prisma: any;
 
 describe('Gamification - Progress Service (intégration DB)', () => {
   const TEST_EMAIL = 'test-progress@example.com';
 
   beforeAll(async () => {
-    await prisma.$connect();
+    prisma = await getPrismaForTests();
     await prisma.user.deleteMany({
       where: { email: TEST_EMAIL },
     });
   });
 
   afterAll(async () => {
-    await prisma.user.deleteMany({
-      where: { email: TEST_EMAIL },
-    });
-    await prisma.$disconnect();
+    if (prisma) {
+      await prisma.user.deleteMany({
+        where: { email: TEST_EMAIL },
+      });
+    }
   });
 
   test('addXP est idempotent pour un même eventId et reflété par getProgressStats', async () => {
@@ -56,4 +57,3 @@ describe('Gamification - Progress Service (intégration DB)', () => {
     expect((dbProgress!.xp ?? 0) - initialStats.xp).toBe(expectedGain);
   });
 });
-

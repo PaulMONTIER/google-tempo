@@ -1,6 +1,6 @@
 'use client';
 
-import { CheckCircle } from '@/components/icons';
+import { CheckCircle } from '@/components/ui/icons';
 import { CalendarEvent } from '@/types';
 import { formatDateShort } from '@/lib/utils/date-formatters';
 import { isPast } from '@/lib/utils/date-helpers';

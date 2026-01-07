@@ -17,6 +17,16 @@ interface MainLayoutProps {
   onConfirmEvent?: () => Promise<void>;
   onModifyEvent?: () => void;
   onRejectEvent?: (reason?: string) => Promise<void>;
+  // MVP Props
+  onSelectIntegration?: (type: any) => void;
+  isIntegrationProcessing?: boolean;
+  processingIntegrationType?: any;
+  // Revision Flow Props
+  revisionFlowState?: 'idle' | 'proposing' | 'ingesting' | 'generating';
+  revisionEvent?: { title: string; date: string } | null;
+  onAcceptRevision?: () => void;
+  onDeclineRevision?: () => void;
+  onGenerateRevision?: (docs: any[]) => Promise<void>;
 }
 
 /**
@@ -34,6 +44,14 @@ export function MainLayout({
   onConfirmEvent,
   onModifyEvent,
   onRejectEvent,
+  onSelectIntegration,
+  isIntegrationProcessing,
+  processingIntegrationType,
+  revisionFlowState,
+  revisionEvent,
+  onAcceptRevision,
+  onDeclineRevision,
+  onGenerateRevision,
 }: MainLayoutProps) {
   return (
     <main className="max-w-[1800px] mx-auto p-6">
@@ -49,6 +67,14 @@ export function MainLayout({
             onConfirmEvent={onConfirmEvent}
             onModifyEvent={onModifyEvent}
             onRejectEvent={onRejectEvent}
+            onSelectIntegration={onSelectIntegration}
+            isIntegrationProcessing={isIntegrationProcessing}
+            processingIntegrationType={processingIntegrationType}
+            revisionFlowState={revisionFlowState}
+            revisionEvent={revisionEvent}
+            onAcceptRevision={onAcceptRevision}
+            onDeclineRevision={onDeclineRevision}
+            onGenerateRevision={onGenerateRevision}
           />
         </div>
 

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { PendingEvent, PendingEventResponse } from '@/types';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Calendar, MapPin, Users, Clock, Check, Edit3, X, Loader2, AlignLeft } from '@/components/icons';
+import { Calendar, MapPin, Users, Clock, Check, Edit3, X, Loader2, AlignLeft } from '@/components/ui/icons';
 
 interface EventConfirmationCardProps {
     pendingEvent: PendingEventResponse;

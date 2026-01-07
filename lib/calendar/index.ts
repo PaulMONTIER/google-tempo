@@ -10,8 +10,11 @@ import { deleteCalendarEvent } from "./delete-event";
 import { findFreeCalendarSlots } from "./find-free-slots";
 import { addGoogleMeet, addGoogleMeetToEvent } from "./add-meet";
 
+import { updateCalendarEvent } from "./update-event";
+
 // Export des fonctions individuelles (pour usage direct)
 export { createCalendarEvent } from "./create-event";
+export { updateCalendarEvent } from "./update-event";
 export { listCalendarEvents } from "./list-events";
 export { deleteCalendarEvent } from "./delete-event";
 export { findFreeCalendarSlots } from "./find-free-slots";
@@ -22,6 +25,7 @@ export { getCalendarClient } from "./oauth-client";
 // Création d'un objet qui expose les mêmes méthodes que l'ancienne classe CalendarHelpers
 export const calendarHelpers = {
   createEvent: createCalendarEvent,
+  updateEvent: updateCalendarEvent,
   listEvents: listCalendarEvents,
   deleteEvent: deleteCalendarEvent,
   findFreeSlots: findFreeCalendarSlots,

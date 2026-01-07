@@ -23,22 +23,29 @@ export interface SkillDetailData {
  * Récupère toutes les compétences d'un utilisateur avec leurs niveaux
  */
 export async function getUserSkills(userId: string): Promise<SkillFamilyData[]> {
-  // Récupérer toutes les familles de compétences actives
-  const families = await prisma.skillFamily.findMany({
-    where: {
-      isActive: true,
-    },
-    orderBy: {
-      order: 'asc',
-    },
-    include: {
-      details: {
-        orderBy: {
-          name: 'asc',
+  try {
+    // Récupérer toutes les familles de compétences actives
+    const families = await prisma.skillFamily.findMany({
+      where: {
+        isActive: true,
+      },
+      orderBy: {
+        order: 'asc',
+      },
+      include: {
+        details: {
+          orderBy: {
+            name: 'asc',
+          },
         },
       },
-    },
-  });
+    });
+
+    // Si pas de familles définies, retourner un tableau vide
+    if (!families || families.length === 0) {
+      logger.debug('Aucune famille de compétences trouvée, retour tableau vide');
+      return [];
+    }
 
   // Pour chaque famille, récupérer la progression de l'utilisateur
   const skillsData: SkillFamilyData[] = [];
@@ -93,9 +100,14 @@ export async function getUserSkills(userId: string): Promise<SkillFamilyData[]> 
     });
   }
 
-  logger.debug(`[skill-service] ${skillsData.length} familles de compétences récupérées pour userId: ${userId}`);
+    logger.debug(`[skill-service] ${skillsData.length} familles de compétences récupérées pour userId: ${userId}`);
 
-  return skillsData;
+    return skillsData;
+  } catch (error) {
+    logger.error('[skill-service] Erreur getUserSkills:', error);
+    // En cas d'erreur, retourner un tableau vide plutôt que de crasher
+    return [];
+  }
 }
 
 /**

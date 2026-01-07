@@ -1,6 +1,6 @@
 'use client';
 
-import { Mic } from '@/components/icons';
+import { Mic } from '@/components/ui/icons';
 import { Section } from '../components/Section';
 import { ToggleSetting } from '../components/ToggleSetting';
 import type { UserSettings } from '@/components/providers/settings-provider';

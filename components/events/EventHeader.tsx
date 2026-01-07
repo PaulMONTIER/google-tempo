@@ -1,6 +1,6 @@
 'use client';
 
-import { X } from '@/components/icons';
+import { X } from '@/components/ui/icons';
 import { CalendarEvent } from '@/types';
 
 interface EventHeaderProps {

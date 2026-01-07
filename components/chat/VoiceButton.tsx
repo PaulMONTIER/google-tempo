@@ -1,6 +1,6 @@
 'use client';
 
-import { Mic, MicOff, Loader2, Volume2 } from '@/components/icons';
+import { Mic, MicOff, Loader2, Volume2 } from '@/components/ui/icons';
 
 interface VoiceButtonProps {
     isActive: boolean;

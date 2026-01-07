@@ -1,6 +1,6 @@
 'use client';
 
-import { Sparkles, X } from '@/components/icons';
+import { Sparkles, X } from '@/components/ui/icons';
 
 interface QuizCardProps {
   eventTitle: string;
