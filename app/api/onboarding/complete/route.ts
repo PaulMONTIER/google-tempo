@@ -95,6 +95,20 @@ export async function POST(request: NextRequest) {
       });
     });
 
+    // Lancer l'analyse rétroactive en arrière-plan (fire-and-forget)
+    // On n'attend PAS la fin pour répondre au client pour éviter que ça "mouline"
+    (async () => {
+      try {
+        console.log('[Onboarding] Lancement de l\'analyse rétroactive (background)...');
+        const { RetroactiveAnalysisService } = await import('@/lib/services/retroactive-analysis');
+        const analysisService = new RetroactiveAnalysisService(session.user.id);
+        await analysisService.analyze();
+        console.log('[Onboarding] Analyse rétroactive terminée avec succès');
+      } catch (analysisError) {
+        console.error('[Onboarding] Erreur lors de l\'analyse rétroactive:', analysisError);
+      }
+    })();
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('❌ Erreur API onboarding/complete:', error);

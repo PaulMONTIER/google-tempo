@@ -29,18 +29,18 @@ export function useCalendarEvents(isAuthenticated: boolean) {
         // Fusionner les événements du serveur avec les mises à jour optimistes en attente
         const serverEvents = data.events;
         const pendingEvents = Array.from(pendingUpdatesRef.current.values());
-        
+
         // Combiner : remplacer les events serveur par les pending si même ID
         const mergedEvents = serverEvents.map((event: CalendarEvent) => {
           const pending = pendingUpdatesRef.current.get(event.id);
           return pending || event;
         });
-        
+
         // Ajouter les nouveaux events (qui n'existent pas encore côté serveur)
         const newPendingEvents = pendingEvents.filter(
           pe => !serverEvents.some((se: CalendarEvent) => se.id === pe.id)
         );
-        
+
         setEvents([...mergedEvents, ...newPendingEvents]);
       } else {
         const error = new Error(`Failed to fetch calendar events: ${res.status}`);
@@ -62,10 +62,10 @@ export function useCalendarEvents(isAuthenticated: boolean) {
   const addEventOptimistic = useCallback((event: CalendarEvent) => {
     const tempId = `temp-${Date.now()}`;
     const optimisticEvent = { ...event, id: tempId };
-    
+
     pendingUpdatesRef.current.set(tempId, optimisticEvent);
     setEvents(prev => [...prev, optimisticEvent]);
-    
+
     return tempId;
   }, []);
 
@@ -98,9 +98,9 @@ export function useCalendarEvents(isAuthenticated: boolean) {
   const confirmOptimisticUpdate = useCallback((tempId: string, realId?: string) => {
     const pending = pendingUpdatesRef.current.get(tempId);
     pendingUpdatesRef.current.delete(tempId);
-    
+
     if (realId && pending) {
-      setEvents(prev => prev.map(event => 
+      setEvents(prev => prev.map(event =>
         event.id === tempId ? { ...pending, id: realId } : event
       ));
     }
@@ -135,6 +135,16 @@ export function useCalendarEvents(isAuthenticated: boolean) {
     removeEventOptimistic,
     confirmOptimisticUpdate,
     rollbackOptimisticUpdate,
+    // New helper
+    createEvent: async (eventData: Partial<CalendarEvent>) => {
+      const res = await fetch('/api/calendar/events', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(eventData),
+      });
+      if (!res.ok) throw new Error('Failed to create event');
+      await fetchCalendarEvents();
+    },
   };
 }
 

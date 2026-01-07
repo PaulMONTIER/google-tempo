@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { CalendarEvent, PendingEvent } from '@/types';
-import { Calendar, Clock, MapPin, AlignLeft, X, Check, Loader2, Trash } from '@/components/icons';
+import { Calendar, Clock, MapPin, AlignLeft, X, Check, Loader2, Trash } from '@/components/ui/icons';
 import { Z_INDEX, DURATIONS } from '@/lib/constants/ui-constants';
 
 interface ManualEventEditModalProps {

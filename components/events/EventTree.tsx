@@ -1,6 +1,6 @@
 'use client';
 
-import { CheckCircle } from '@/components/icons';
+import { CheckCircle } from '@/components/ui/icons';
 import { CalendarEvent } from '@/types';
 import { buildEventTree, type EventTree } from './utils/event-tree-builder';
 import { getEventStatus, getStatusConfig } from './utils/event-status';

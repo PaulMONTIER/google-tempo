@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, Loader2, TreeDeciduous } from '@/components/icons';
+import { X, Loader2, TreeDeciduous } from '@/components/ui/icons';
 import { useTreeData } from '@/hooks/use-tree-data';
 import { TreeItem } from './TreeItem';
 import { EmptyState } from './EmptyState';

@@ -1,6 +1,6 @@
 'use client';
 
-import { Calendar, CheckCircle } from '@/components/icons';
+import { Calendar, CheckCircle } from '@/components/ui/icons';
 import { TreeData } from '@/lib/services/tree-service';
 import { TreeTimeline } from './TreeTimeline';
 import { ProgressRing } from '@/components/ui/ProgressRing';

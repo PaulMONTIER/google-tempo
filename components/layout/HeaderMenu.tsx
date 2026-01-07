@@ -1,6 +1,6 @@
 'use client';
 
-import { Settings, Menu, Trash, HelpCircle, Zap, GitBranch, TrendingUp } from '@/components/icons';
+import { Settings, Menu, Trash, HelpCircle, Zap, GitBranch, TrendingUp } from '@/components/ui/icons';
 import { Z_INDEX } from '@/lib/constants/ui-constants';
 
 interface HeaderMenuProps {

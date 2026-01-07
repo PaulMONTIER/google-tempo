@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { signOut } from 'next-auth/react';
-import { User, Shield, LogOut, Mail, Settings } from '@/components/icons';
+import { User, Shield, LogOut, Mail, Settings } from '@/components/ui/icons';
 import { Gift, ArrowRight, Sparkles, RefreshCw } from 'lucide-react';
 import { Section } from '../components/Section';
 import { ToggleSetting } from '../components/ToggleSetting';
@@ -222,7 +222,7 @@ export function AccountTab({ userInfo }: AccountTabProps) {
             onChange={handlePromotionalChange}
           />
           <p className="text-xs text-notion-textLight mt-2 p-3 bg-notion-sidebar rounded-lg">
-            💡 Ces données ne sont jamais partagées avec des tiers. 
+            💡 Ces données ne sont jamais partagées avec des tiers.
             Tu peux modifier ces choix à tout moment.
           </p>
         </div>
@@ -316,6 +316,33 @@ function DevSection({ onReset }: { onReset: () => void }) {
     }
   };
 
+  const handleRevokeOAuth = async () => {
+    if (!confirm('Cela va révoquer ton autorisation Google (Drive, Gmail, Calendar).\n\nTu devras te reconnecter et ré-autoriser les permissions.\n\nContinuer ?')) {
+      return;
+    }
+
+    setIsResetting(true);
+    setResetResult(null);
+
+    try {
+      const response = await fetch('/api/auth/revoke', { method: 'POST' });
+      const data = await response.json();
+
+      if (response.ok) {
+        setResetResult('✅ OAuth révoqué ! Déconnexion...');
+        setTimeout(() => {
+          signOut({ callbackUrl: '/' });
+        }, 1500);
+      } else {
+        setResetResult(`❌ Erreur: ${data.error || 'Inconnue'}`);
+        setIsResetting(false);
+      }
+    } catch {
+      setResetResult('❌ Erreur réseau');
+      setIsResetting(false);
+    }
+  };
+
   return (
     <Section title="🛠️ Développement" icon={RefreshCw}>
       <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl border border-yellow-200 dark:border-yellow-700 space-y-3">
@@ -355,6 +382,23 @@ function DevSection({ onReset }: { onReset: () => void }) {
             <LogOut className="w-4 h-4" />
           )}
           <span>🔄 Reset COMPLET + Déconnexion</span>
+        </button>
+
+        {/* Révoquer OAuth - Fix Drive 403 */}
+        <button
+          onClick={handleRevokeOAuth}
+          disabled={isResetting}
+          className="w-full px-4 py-2.5 text-sm font-medium text-blue-800
+                   bg-blue-100 hover:bg-blue-200 rounded-lg transition-colors
+                   disabled:opacity-50 disabled:cursor-not-allowed
+                   flex items-center justify-center gap-2 border border-blue-300"
+        >
+          {isResetting ? (
+            <RefreshCw className="w-4 h-4 animate-spin" />
+          ) : (
+            <Shield className="w-4 h-4" />
+          )}
+          <span>🔑 Révoquer OAuth (Fix Drive/Gmail)</span>
         </button>
 
         <p className="text-xs text-yellow-700 dark:text-yellow-300">

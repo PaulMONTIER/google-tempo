@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import { X, User, Bell, Palette, Calendar, Mic } from '@/components/icons';
+import { X, User, Bell, Palette, Calendar, Mic } from '@/components/ui/icons';
 import { useSettings, UserSettings } from '@/components/providers/settings-provider';
 import { AccountTab, NotificationsTab, AppearanceTab, CalendarTab, VoiceTab } from './tabs';
 import { Z_INDEX, DURATIONS } from '@/lib/constants/ui-constants';

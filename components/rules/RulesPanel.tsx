@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, Plus, Trash, Play, Pause, Zap } from '@/components/icons';
+import { X, Plus, Trash, Play, Pause, Zap } from '@/components/ui/icons';
 import type { Rule } from '@/types';
 import { Z_INDEX, DURATIONS } from '@/lib/constants/ui-constants';
 

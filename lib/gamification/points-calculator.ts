@@ -8,51 +8,7 @@ export interface PointsCalculation {
   breakdown: string[];
 }
 
-/**
- * Règles d'attribution de points par catégorie
- * Basé sur le plan:
- * - Études: 10 pts base, +5 si > 1h, +3 si récurrent
- * - Sport: 15 pts base, +10 si > 1h, +5 si récurrent
- * - Pro: 8 pts base, +3 si > 30min, +2 si récurrent
- * - Personnel: 5 pts base, pas de bonus
- */
-const POINTS_RULES: Record<EventCategory, {
-  base: number;
-  durationThreshold: number; // minutes
-  durationBonus: number;
-  recurrenceBonus: number;
-}> = {
-  studies: {
-    base: 10,
-    durationThreshold: 60, // 1h
-    durationBonus: 5,
-    recurrenceBonus: 3,
-  },
-  sport: {
-    base: 15,
-    durationThreshold: 60, // 1h
-    durationBonus: 10,
-    recurrenceBonus: 5,
-  },
-  pro: {
-    base: 8,
-    durationThreshold: 30, // 30min
-    durationBonus: 3,
-    recurrenceBonus: 2,
-  },
-  personal: {
-    base: 5,
-    durationThreshold: 0,
-    durationBonus: 0,
-    recurrenceBonus: 0,
-  },
-  unknown: {
-    base: 2,
-    durationThreshold: 0,
-    durationBonus: 0,
-    recurrenceBonus: 0,
-  },
-};
+import { POINTS_RULES, TROPHY_LEVELS } from '@/lib/constants/points-rules';
 
 /**
  * Calcule les points pour un événement classifié
@@ -144,28 +100,19 @@ export function calculateTrophyLevel(points: number): {
   nextLevelPoints: number;
   progress: number;
 } {
-  const levels = [
-    { threshold: 0, name: 'Débutant' },
-    { threshold: 50, name: 'Apprenti' },
-    { threshold: 150, name: 'Confirmé' },
-    { threshold: 350, name: 'Expert' },
-    { threshold: 700, name: 'Maître' },
-    { threshold: 1200, name: 'Légende' },
-  ];
-
   let currentLevel = 0;
-  let currentName = levels[0].name;
-  let nextThreshold = levels[1]?.threshold || Infinity;
+  let currentName = TROPHY_LEVELS[0].name;
+  let nextThreshold = TROPHY_LEVELS[1]?.threshold || Infinity;
 
-  for (let i = 0; i < levels.length; i++) {
-    if (points >= levels[i].threshold) {
+  for (let i = 0; i < TROPHY_LEVELS.length; i++) {
+    if (points >= TROPHY_LEVELS[i].threshold) {
       currentLevel = i;
-      currentName = levels[i].name;
-      nextThreshold = levels[i + 1]?.threshold || Infinity;
+      currentName = TROPHY_LEVELS[i].name;
+      nextThreshold = TROPHY_LEVELS[i + 1]?.threshold || Infinity;
     }
   }
 
-  const currentThreshold = levels[currentLevel].threshold;
+  const currentThreshold = TROPHY_LEVELS[currentLevel].threshold;
   const progress = nextThreshold === Infinity
     ? 100
     : Math.round(((points - currentThreshold) / (nextThreshold - currentThreshold)) * 100);
@@ -177,5 +124,6 @@ export function calculateTrophyLevel(points: number): {
     progress: Math.min(progress, 100),
   };
 }
+
 
 

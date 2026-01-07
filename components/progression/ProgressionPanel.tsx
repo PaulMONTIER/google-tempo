@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
-import { Trophy, TrendingUp, Award, Target } from '@/components/icons';
+import { Trophy, TrendingUp, Award, Target } from '@/components/ui/icons';
 import { ArenaTab, SkillsTab, StatsTab, QuestsTab } from './tabs';
 import { Z_INDEX, DURATIONS } from '@/lib/constants/ui-constants';
 

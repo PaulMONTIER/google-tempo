@@ -6,7 +6,7 @@ import { MonthView } from './MonthView';
 import { WeekView } from './WeekView';
 import { DayView } from './DayView';
 import { AgendaView } from './AgendaView';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, List } from '@/components/icons';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, List } from '@/components/ui/icons';
 import { addMonths, addWeeks, addDays, subMonths, subWeeks, subDays, format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useSettings } from '@/components/providers/settings-provider';

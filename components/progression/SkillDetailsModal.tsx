@@ -1,6 +1,6 @@
 'use client';
 
-import { X } from '@/components/icons';
+import { X } from '@/components/ui/icons';
 import type { SkillFamilyData } from '@/lib/gamification/skill-service';
 import { Z_INDEX, DURATIONS } from '@/lib/constants/ui-constants';
 

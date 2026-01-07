@@ -1,6 +1,6 @@
 'use client';
 
-import { GitBranch } from '@/components/icons';
+import { GitBranch } from '@/components/ui/icons';
 
 interface EmptyStateProps {
   onRetry?: () => void;

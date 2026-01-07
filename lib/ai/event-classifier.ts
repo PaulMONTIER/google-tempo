@@ -77,21 +77,15 @@ Réponds UNIQUEMENT en JSON valide (sans markdown): { "category": "...", "subcat
   return classifyByKeywords(title, description);
 }
 
+import { CLASSIFICATION_KEYWORDS } from '@/lib/constants/classification-keywords';
+
 /**
  * Classification fallback par mots-clés (si Gemini échoue)
  */
 function classifyByKeywords(title: string, description?: string): ClassificationResult {
   const text = `${title} ${description || ''}`.toLowerCase();
 
-  const keywords: Record<EventCategory, string[]> = {
-    studies: ['révision', 'revision', 'cours', 'exam', 'partiel', 'td', 'tp', 'biblio', 'mémoire', 'thèse', 'devoir', 'étude', 'math', 'physique', 'chimie', 'droit', 'économie'],
-    sport: ['sport', 'running', 'course', 'musculation', 'yoga', 'natation', 'vélo', 'cycling', 'football', 'basket', 'tennis', 'entraînement', 'match', 'gym', 'fitness'],
-    pro: ['réunion', 'meeting', 'call', 'entretien', 'stage', 'travail', 'projet', 'client', 'présentation', 'deadline'],
-    personal: ['médecin', 'rdv', 'famille', 'ami', 'anniversaire', 'resto', 'cinéma', 'sortie', 'vacances'],
-    unknown: [],
-  };
-
-  for (const [category, words] of Object.entries(keywords)) {
+  for (const [category, words] of Object.entries(CLASSIFICATION_KEYWORDS)) {
     if (category === 'unknown') continue;
     for (const word of words) {
       if (text.includes(word)) {
@@ -106,6 +100,7 @@ function classifyByKeywords(title: string, description?: string): Classification
 
   return { category: 'unknown', subcategory: null, confidence: 0.3 };
 }
+
 
 /**
  * Classifie plusieurs événements en batch (plus efficace)

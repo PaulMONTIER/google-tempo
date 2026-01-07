@@ -19,6 +19,10 @@ export interface GoogleCalendarEventInput {
     overrides?: Array<{ method: "email" | "popup"; minutes: number }>;
   };
   conferenceData?: any;
+  extendedProperties?: {
+    private?: Record<string, string>;
+    shared?: Record<string, string>;
+  };
 }
 
 /**

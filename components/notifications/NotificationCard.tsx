@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, CheckCircle, AlertCircle, Info, XCircle } from '@/components/icons';
+import { X, CheckCircle, AlertCircle, Info, XCircle } from '@/components/ui/icons';
 import type { Notification } from '@/types/notifications';
 
 interface NotificationCardProps {
