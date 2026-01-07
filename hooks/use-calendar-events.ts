@@ -136,14 +136,16 @@ export function useCalendarEvents(isAuthenticated: boolean) {
     confirmOptimisticUpdate,
     rollbackOptimisticUpdate,
     // New helper
-    createEvent: async (eventData: Partial<CalendarEvent>) => {
+    createEvent: async (eventData: Partial<CalendarEvent>): Promise<CalendarEvent | null> => {
       const res = await fetch('/api/calendar/events', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(eventData),
       });
       if (!res.ok) throw new Error('Failed to create event');
+      const data = await res.json();
       await fetchCalendarEvents();
+      return data.event || null;
     },
   };
 }

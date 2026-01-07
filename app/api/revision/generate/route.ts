@@ -42,6 +42,7 @@ export async function POST(request: NextRequest) {
         }
 
         console.log(`[Revision Generate] Creating plan for "${eventTitle}" on ${eventDate}`);
+        console.log(`[Revision Generate] Config received: sessionsCount=${sessionsCount}, sessionDuration=${sessionDuration}, includeQCM=${includeQCM}`);
 
         const plan = await generateRevisionPlan(
             session.user.id,

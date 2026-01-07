@@ -80,20 +80,25 @@ export function ManualEventEditModal({
     };
 
     const handleDelete = async () => {
-        if (!confirm('Êtes-vous sûr de vouloir supprimer cet événement ?')) return;
-
         setIsDeleting(true);
         try {
-            const res = await fetch(`/api/calendar/events/${event.id}`, {
+            const url = `/api/calendar/events/${event.id}`;
+
+            const res = await fetch(url, {
                 method: 'DELETE',
             });
 
-            if (!res.ok) throw new Error('Erreur lors de la suppression');
+            // 200 = success, 410 = already deleted (treat as success)
+            if (res.ok || res.status === 410) {
+                onSaveSuccess();
+                handleClose();
+                return;
+            }
 
-            onSaveSuccess();
-            handleClose();
+            const errorData = await res.json().catch(() => ({}));
+            throw new Error(errorData.error || 'Erreur lors de la suppression');
         } catch (error) {
-            console.error(error);
+            console.error('[ManualEventEditModal] DELETE exception:', error);
             alert('Erreur lors de la suppression');
         } finally {
             setIsDeleting(false);

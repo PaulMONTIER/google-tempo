@@ -173,16 +173,19 @@ export default function Home() {
     sendMessage("Pas de problème ! N'hésite pas si tu changes d'avis.");
   };
 
-  const handleGenerateRevision = async (docs: any[]) => {
+  const handleGenerateRevision = async (config: any) => {
     if (!revisionEvent) return;
 
     setRevisionFlowState('generating');
 
-    // Pass data directly to avoid state race conditions
+    // Pass full config including sessionsCount, sessionDuration, includeQCM
     await integrations.generateRevisionPlan({
       eventTitle: revisionEvent.title,
       eventDate: revisionEvent.date,
-      documents: docs
+      documents: config.documents || [],
+      sessionsCount: config.sessionsCount,
+      sessionDuration: config.sessionDuration,
+      includeQCM: config.includeQCM,
     });
 
     setRevisionFlowState('idle');
@@ -191,6 +194,8 @@ export default function Home() {
 
   const handleAddRevisionSessions = async (sessions: RevisionSession[]) => {
     try {
+      const createdEventIds: string[] = [];
+
       for (const session of sessions) {
         // Parse duration (ex: "1h30" or "90min")
         let durationMinutes = 60;
@@ -212,46 +217,63 @@ export default function Home() {
           ? new Date(session.end)
           : new Date(startDate.getTime() + durationMinutes * 60 * 1000);
 
-        await createEvent({
+        const createdEvent = await createEvent({
           title: `📚 ${session.title}`,
           description: session.description,
           startDate: startDate,
           endDate: endDate,
         });
+
+        if (createdEvent?.id) {
+          createdEventIds.push(createdEvent.id);
+        }
       }
 
-      // Use notification instead of chat message
-      // Assuming we have access to a notification function or we can add a system message that is less intrusive?
-      // The user asked for a "petite notif pop-up".
-      // We can use the existing NotificationSystem via a dispatch or context if available.
-      // But here we are in page.tsx. We can use a toast/notification component if one exists.
-      // Looking at imports: `NotificationPanel` exists.
-      // Let's check if there is a `useNotification` hook or similar.
-      // For now, I will comment out the sendMessage and maybe use a simple alert or look for a toast.
-      // Actually, I see `NotificationContainer` in the JSX.
-      // I'll check `components/notifications/NotificationSystem.tsx` to see how to trigger it.
-      // For now, I'll just remove the chat message to satisfy "il se parle à lui".
-      // And I'll try to trigger a browser notification or a UI toast if I can find one.
-      // I'll stick to removing the chat message for now and maybe adding a "Success" state to the card.
-      // The card already has a "Sessions ajoutées" state.
+      // Create a tree in Arbre with this revision plan
+      if (integrations.revisionPlan && createdEventIds.length > 0) {
+        try {
+          const plan = integrations.revisionPlan;
+          const treeId = `revision_${Date.now()}`;
 
-      // sendMessage(`J'ai ajouté ${sessions.length} sessions de révision à ton calendrier ! 🚀`);
+          // Create tree via API
+          const treeResponse = await fetch('/api/trees', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              treeId,
+              goalEventId: `goal_${treeId}`, // Virtual ID for the goal (the exam)
+              goalTitle: plan.eventTitle,
+              goalDate: new Date(plan.eventDate).toISOString(),
+              detectionMethod: 'revision_planner',
+            }),
+          });
+
+          if (treeResponse.ok) {
+            // Add branches for each session using PUT /api/trees/[treeId]
+            for (let i = 0; i < sessions.length; i++) {
+              const session = sessions[i];
+              const eventId = createdEventIds[i] || `session_${i}`;
+
+              await fetch(`/api/trees/${treeId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  branchEventId: eventId,
+                  branchTitle: session.title,
+                  branchDate: new Date(session.start || session.date).toISOString(),
+                  order: i,
+                }),
+              });
+            }
+            console.log(`[Revision] Tree created with ${sessions.length} branches`);
+          }
+        } catch (treeError) {
+          console.error('Error creating tree:', treeError);
+          // Don't fail the whole operation if tree creation fails
+        }
+      }
+
       integrations.clearRevisionPlan();
-
-      // Trigger a toast/notification if possible.
-      // I will add a TODO to implement a proper toast system if not present.
-      // But wait, the user specifically asked for a pop-up.
-      // I'll try to use `window.alert` as a crude fallback or just rely on the UI feedback in the card (which changes to "Sessions ajoutées").
-      // The card itself has `setIsAdded(true)` which shows "Sessions ajoutées au calendrier !".
-      // So removing the chat message might be enough if the card stays visible for a moment or if the feedback is clear.
-      // However, `integrations.clearRevisionPlan()` removes the card immediately.
-      // I should delay clearing the plan or let the card handle the success state.
-      // The card calls `onAddToCalendar` and then sets `isAdded`.
-      // If I clear the plan immediately, the card disappears.
-      // I should probably NOT clear the plan immediately, or let the user dismiss it.
-      // But `RevisionPlanCard` calls `onAddToCalendar`.
-      // If I remove `integrations.clearRevisionPlan()` here, the card will stay with "Sessions ajoutées".
-      // That seems perfect.
 
     } catch (error) {
       console.error('Error adding revision sessions:', error);
@@ -339,28 +361,15 @@ export default function Home() {
           onAcceptRevision={handleAcceptRevision}
           onDeclineRevision={handleDeclineRevision}
           onGenerateRevision={handleGenerateRevision}
+          // Revision Plan - Inline in Chat
+          revisionPlan={integrations.revisionPlan}
+          onAddRevisionToCalendar={handleAddRevisionSessions}
+          onDismissRevisionPlan={integrations.clearRevisionPlan}
+          // Gmail Deadlines - Inline in Chat
+          detectedDeadlines={integrations.detectedDeadlines}
+          onAddDeadlineToCalendar={handleAddToCalendar}
+          onDismissDeadlines={integrations.clearDeadlines}
         />
-
-        {/* MVP Overlays / Side Panels */}
-        {(integrations.hasDeadlines || integrations.revisionPlan) && (
-          <div className="absolute top-20 right-4 w-80 space-y-4 z-40">
-            {integrations.detectedDeadlines && (
-              <GmailDeadlineCard
-                deadlines={integrations.detectedDeadlines}
-                onAddToCalendar={handleAddToCalendar}
-                onDismiss={integrations.clearDeadlines}
-              />
-            )}
-
-            {integrations.revisionPlan && (
-              <RevisionPlanCard
-                plan={integrations.revisionPlan}
-                onAddToCalendar={handleAddRevisionSessions}
-                onDismiss={integrations.clearRevisionPlan}
-              />
-            )}
-          </div>
-        )}
       </div>
 
       {/* Panels */}

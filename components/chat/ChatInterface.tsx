@@ -8,9 +8,12 @@ import { VoiceButton } from './VoiceButton';
 import { VoiceIndicator } from './VoiceIndicator';
 import { IntegrationMenu, IntegrationType } from './IntegrationMenu';
 import { RevisionProposalCard } from './RevisionProposalCard';
-import { DocumentIngestionModal } from './DocumentIngestionModal';
+import { RevisionPlanCard } from './RevisionPlanCard';
+import { GmailDeadlineCard } from './GmailDeadlineCard';
+import { RevisionConfigurationModal, RevisionConfiguration } from './RevisionConfigurationModal';
 import { useVoiceAssistant } from '@/hooks/use-voice-assistant';
 import { useSettings } from '@/components/providers/settings-provider';
+import { RevisionPlan, RevisionSession, DetectedDeadline } from '@/types/integrations';
 
 interface ChatInterfaceProps {
   messages: ChatMessage[];
@@ -30,7 +33,15 @@ interface ChatInterfaceProps {
   revisionEvent?: { title: string; date: string } | null;
   onAcceptRevision?: () => void;
   onDeclineRevision?: () => void;
-  onGenerateRevision?: (docs: any[]) => Promise<void>;
+  onGenerateRevision?: (config: RevisionConfiguration) => Promise<void>;
+  // Revision Plan Display (inline in chat)
+  revisionPlan?: RevisionPlan | null;
+  onAddRevisionToCalendar?: (sessions: RevisionSession[]) => Promise<void>;
+  onDismissRevisionPlan?: () => void;
+  // Gmail Deadlines Display (inline in chat)
+  detectedDeadlines?: DetectedDeadline[] | null;
+  onAddDeadlineToCalendar?: (deadline: DetectedDeadline) => Promise<void>;
+  onDismissDeadlines?: () => void;
 }
 
 export function ChatInterface({
@@ -50,6 +61,12 @@ export function ChatInterface({
   onAcceptRevision,
   onDeclineRevision,
   onGenerateRevision,
+  revisionPlan,
+  onAddRevisionToCalendar,
+  onDismissRevisionPlan,
+  detectedDeadlines,
+  onAddDeadlineToCalendar,
+  onDismissDeadlines,
 }: ChatInterfaceProps) {
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -204,12 +221,34 @@ export function ChatInterface({
         )}
 
         {revisionFlowState === 'ingesting' && revisionEvent && onGenerateRevision && (
-          <DocumentIngestionModal
+          <RevisionConfigurationModal
             isOpen={true}
-            onClose={onDeclineRevision!} // Closing modal = declining flow
+            onClose={onDeclineRevision!}
             onGenerate={onGenerateRevision}
             eventTitle={revisionEvent.title}
           />
+        )}
+
+        {/* Revision Plan Inline Display */}
+        {revisionPlan && onAddRevisionToCalendar && (
+          <div className="w-full">
+            <RevisionPlanCard
+              plan={revisionPlan}
+              onAddToCalendar={onAddRevisionToCalendar}
+              onDismiss={onDismissRevisionPlan}
+            />
+          </div>
+        )}
+
+        {/* Gmail Deadlines Inline Display */}
+        {detectedDeadlines && detectedDeadlines.length > 0 && onAddDeadlineToCalendar && (
+          <div className="w-full">
+            <GmailDeadlineCard
+              deadlines={detectedDeadlines}
+              onAddToCalendar={onAddDeadlineToCalendar}
+              onDismiss={onDismissDeadlines}
+            />
+          </div>
         )}
 
         {isLoading && !voiceSession.isActive && (

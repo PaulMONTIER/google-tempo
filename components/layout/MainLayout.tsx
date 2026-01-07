@@ -3,6 +3,7 @@
 import { ChatInterface } from '@/components/chat/ChatInterface';
 import { Calendar } from '@/components/calendar/Calendar';
 import { ChatMessage, CalendarEvent, PendingEventResponse, PendingEvent } from '@/types';
+import { RevisionPlan, RevisionSession, DetectedDeadline } from '@/types/integrations';
 
 interface MainLayoutProps {
   messages: ChatMessage[];
@@ -26,7 +27,15 @@ interface MainLayoutProps {
   revisionEvent?: { title: string; date: string } | null;
   onAcceptRevision?: () => void;
   onDeclineRevision?: () => void;
-  onGenerateRevision?: (docs: any[]) => Promise<void>;
+  onGenerateRevision?: (config: any) => Promise<void>;
+  // Revision Plan Display (inline in chat)
+  revisionPlan?: RevisionPlan | null;
+  onAddRevisionToCalendar?: (sessions: RevisionSession[]) => Promise<void>;
+  onDismissRevisionPlan?: () => void;
+  // Gmail Deadlines Display (inline in chat)
+  detectedDeadlines?: DetectedDeadline[] | null;
+  onAddDeadlineToCalendar?: (deadline: DetectedDeadline) => Promise<void>;
+  onDismissDeadlines?: () => void;
 }
 
 /**
@@ -52,6 +61,12 @@ export function MainLayout({
   onAcceptRevision,
   onDeclineRevision,
   onGenerateRevision,
+  revisionPlan,
+  onAddRevisionToCalendar,
+  onDismissRevisionPlan,
+  detectedDeadlines,
+  onAddDeadlineToCalendar,
+  onDismissDeadlines,
 }: MainLayoutProps) {
   return (
     <main className="max-w-[1800px] mx-auto p-6">
@@ -75,6 +90,12 @@ export function MainLayout({
             onAcceptRevision={onAcceptRevision}
             onDeclineRevision={onDeclineRevision}
             onGenerateRevision={onGenerateRevision}
+            revisionPlan={revisionPlan}
+            onAddRevisionToCalendar={onAddRevisionToCalendar}
+            onDismissRevisionPlan={onDismissRevisionPlan}
+            detectedDeadlines={detectedDeadlines}
+            onAddDeadlineToCalendar={onAddDeadlineToCalendar}
+            onDismissDeadlines={onDismissDeadlines}
           />
         </div>
 

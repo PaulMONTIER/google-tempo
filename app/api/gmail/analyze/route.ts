@@ -55,87 +55,97 @@ export async function POST(request: NextRequest) {
         const days = body.days || 2;
 
         console.log(`[Gmail Analyze] Fetching emails from last ${days} days...`);
+        console.log(`[Gmail Analyze] AccessToken present: ${!!session.accessToken}`);
+        console.log(`[Gmail Analyze] AccessToken length: ${session.accessToken?.length || 0}`);
 
         // 1. Récupérer les emails récents
-        const emails = await fetchRecentEmails(session.accessToken, days);
+        try {
+            const emails = await fetchRecentEmails(session.accessToken, days);
 
-        if (emails.length === 0) {
+            if (emails.length === 0) {
+                return NextResponse.json({
+                    success: true,
+                    deadlines: [],
+                    emailsAnalyzed: 0,
+                    message: 'Aucun email récent trouvé.',
+                });
+            }
+
+            console.log(`[Gmail Analyze] Found ${emails.length} emails, analyzing...`);
+
+            // 2. Formater pour l'IA
+            const emailsText = formatEmailsForAnalysis(emails);
+
+            // 3. Analyser avec Gemini
+            const model = createGeminiModel({ temperature: 0 });
+
+            const response = await model.invoke([
+                new SystemMessage(DEADLINE_DETECTION_PROMPT),
+                new HumanMessage(`Voici les emails à analyser:\n\n${emailsText}`),
+            ]);
+
+            // 4. Parser la réponse
+            const content = response.content as string;
+
+            // Extraire le JSON de la réponse
+            let deadlines: DetectedDeadline[] = [];
+            try {
+                const jsonMatch = content.match(/\{[\s\S]*\}/);
+                if (jsonMatch) {
+                    const parsed = JSON.parse(jsonMatch[0]);
+                    deadlines = parsed.deadlines || [];
+                }
+            } catch (parseError) {
+                console.error('[Gmail Analyze] Error parsing AI response:', parseError);
+                console.log('[Gmail Analyze] Raw response:', content);
+            }
+
+            console.log(`[Gmail Analyze] Detected ${deadlines.length} deadlines`);
+
+            // 5. Enrichissement proactif (Optionnel mais recommandé)
+            if (deadlines.length > 0) {
+                const { contentAgent } = await import('@/lib/agents/content-agent');
+                await Promise.all(deadlines.map(async (d) => {
+                    try {
+                        d.suggestedResources = await contentAgent.quickEnrich(d.title);
+                    } catch (e) {
+                        console.error(`Failed to enrich deadline: ${d.title}`, e);
+                    }
+                }));
+            }
+
             return NextResponse.json({
                 success: true,
-                deadlines: [],
-                emailsAnalyzed: 0,
-                message: 'Aucun email récent trouvé.',
+                deadlines,
+                emailsAnalyzed: emails.length,
+                message: deadlines.length > 0
+                    ? `${deadlines.length} deadline(s) détectée(s) dans vos emails.`
+                    : 'Aucune deadline détectée dans vos emails récents.',
             });
-        }
 
-        console.log(`[Gmail Analyze] Found ${emails.length} emails, analyzing...`);
+        } catch (error: any) {
+            console.error('[Gmail Analyze] Error:', error);
 
-        // 2. Formater pour l'IA
-        const emailsText = formatEmailsForAnalysis(emails);
-
-        // 3. Analyser avec Gemini
-        const model = createGeminiModel({ temperature: 0 });
-
-        const response = await model.invoke([
-            new SystemMessage(DEADLINE_DETECTION_PROMPT),
-            new HumanMessage(`Voici les emails à analyser:\n\n${emailsText}`),
-        ]);
-
-        // 4. Parser la réponse
-        const content = response.content as string;
-
-        // Extraire le JSON de la réponse
-        let deadlines: DetectedDeadline[] = [];
-        try {
-            const jsonMatch = content.match(/\{[\s\S]*\}/);
-            if (jsonMatch) {
-                const parsed = JSON.parse(jsonMatch[0]);
-                deadlines = parsed.deadlines || [];
+            // Vérifier si c'est une erreur d'autorisation Gmail
+            if (error.code === 403 || error.message?.includes('insufficientPermissions')) {
+                return NextResponse.json(
+                    {
+                        error: 'Accès Gmail non autorisé. Veuillez vous reconnecter pour autoriser l\'accès à vos emails.',
+                        needsReauth: true
+                    },
+                    { status: 403 }
+                );
             }
-        } catch (parseError) {
-            console.error('[Gmail Analyze] Error parsing AI response:', parseError);
-            console.log('[Gmail Analyze] Raw response:', content);
-        }
 
-        console.log(`[Gmail Analyze] Detected ${deadlines.length} deadlines`);
-
-        // 5. Enrichissement proactif (Optionnel mais recommandé)
-        if (deadlines.length > 0) {
-            const { contentAgent } = await import('@/lib/agents/content-agent');
-            await Promise.all(deadlines.map(async (d) => {
-                try {
-                    d.suggestedResources = await contentAgent.quickEnrich(d.title);
-                } catch (e) {
-                    console.error(`Failed to enrich deadline: ${d.title}`, e);
-                }
-            }));
-        }
-
-        return NextResponse.json({
-            success: true,
-            deadlines,
-            emailsAnalyzed: emails.length,
-            message: deadlines.length > 0
-                ? `${deadlines.length} deadline(s) détectée(s) dans vos emails.`
-                : 'Aucune deadline détectée dans vos emails récents.',
-        });
-
-    } catch (error: any) {
-        console.error('[Gmail Analyze] Error:', error);
-
-        // Vérifier si c'est une erreur d'autorisation Gmail
-        if (error.code === 403 || error.message?.includes('insufficientPermissions')) {
             return NextResponse.json(
-                {
-                    error: 'Accès Gmail non autorisé. Veuillez vous reconnecter pour autoriser l\'accès à vos emails.',
-                    needsReauth: true
-                },
-                { status: 403 }
+                { error: 'Erreur lors de l\'analyse des emails', details: error.message },
+                { status: 500 }
             );
         }
-
+    } catch (outerError: any) {
+        console.error('[Gmail Analyze] Outer Error:', outerError);
         return NextResponse.json(
-            { error: 'Erreur lors de l\'analyse des emails', details: error.message },
+            { error: 'Erreur inattendue', details: outerError.message },
             { status: 500 }
         );
     }
