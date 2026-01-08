@@ -97,7 +97,7 @@ export class ContentAgent {
         ].filter((v, i, a) => v && a.indexOf(v) === i);
 
         for (const variant of variants) {
-            const videos = await youtubeService.searchVideos(`${variant} tutorial`, 5, accessToken);
+            const videos = await youtubeService.searchVideos(`${variant} tutorial`, 5);
             if (videos.length > 0) return videos;
         }
         return [];

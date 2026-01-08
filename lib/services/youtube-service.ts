@@ -28,12 +28,11 @@ export class YouTubeService {
 
     /**
      * Search for videos and return scored candidates
+     * Uses only API Key for public search (no OAuth needed)
      */
-    async searchVideos(query: string, maxResults: number = 5, accessToken?: string): Promise<VideoMetadata[]> {
-        const auth = accessToken || YOUTUBE_API_KEY;
-
-        if (!auth) {
-            console.warn('[YouTubeService] No auth provided');
+    async searchVideos(query: string, maxResults: number = 5): Promise<VideoMetadata[]> {
+        if (!YOUTUBE_API_KEY) {
+            console.warn('[YouTubeService] No YOUTUBE_API_KEY or GOOGLE_API_KEY configured');
             return [];
         }
 
@@ -43,7 +42,6 @@ export class YouTubeService {
                 q: query,
                 type: ['video'],
                 maxResults: maxResults,
-                ...(accessToken ? { access_token: accessToken } : {})
             };
 
             const searchRes = await this.youtube.search.list(searchParams);
@@ -55,7 +53,6 @@ export class YouTubeService {
             const videosRes = await this.youtube.videos.list({
                 part: ['snippet', 'contentDetails', 'statistics'],
                 id: videoIds,
-                ...(accessToken ? { access_token: accessToken } : {})
             });
 
             return (videosRes.data.items || []).map(item => this.mapToMetadata(item));
