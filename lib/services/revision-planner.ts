@@ -10,23 +10,24 @@ const REVISION_PLANNER_PROMPT = `Tu es un expert en planification de révisions 
 
 Ton rôle est de créer un programme de révision personnalisé, réaliste et optimisé pour l'étudiant.
 
-DONNÉES D'ENTRÉE:
+DATAÉES D'ENTRÉE:
 1. Événement cible (Examen/Partiel)
 2. Créneaux disponibles (Free Slots) du calendrier
 3. Préférences de l'étudiant (Durée max, heures préférées)
 4. Documents de cours (Context)
 
 RÈGLES DE PLANIFICATION STRICTES:
-1. **Respecter les disponibilités**: Ne planifie JAMAIS sur un créneau non listé dans "FREE SLOTS".
-2. **Durée des sessions**: 
+1. **NOMBRE DE SESSIONS OBLIGATOIRE**: Tu DOIS générer EXACTEMENT le nombre de sessions demandé. C'est NON NÉGOCIABLE.
+2. **Répartition**: Distribue les sessions uniformément sur les jours disponibles.
+3. **Durée des sessions**: 
    - Par défaut 1h30 à 2h.
    - Adapter si le créneau libre est plus court.
-   - Max 1 grosse session par jour (ou 2 petites espacées).
-3. **Progression pédagogique**:
-   - Début: Vue d'ensemble, lecture, fiches.
-   - Milieu: Exercices, pratique, approfondissement.
-   - Fin (Veille): Synthèse, points clés, repos.
-4. **Contenu**: Utilise les documents fournis pour nommer précisément les sessions (ex: "Chapitre 1: Les bases").
+4. **Progression pédagogique**:
+   - Session 1: Vue d'ensemble et Concepts Clés
+   - Sessions 2-3: Approfondissement et Exercices
+   - Session 4: Pratique Avancée
+   - Session 5 (Dernière): Révision Finale et QCM
+5. **Contenu**: Utilise les documents fournis pour nommer précisément les sessions.
 
 FORMAT DE RÉPONSE ATTENDU (JSON UNIQUEMENT):
 {
@@ -37,23 +38,16 @@ FORMAT DE RÉPONSE ATTENDU (JSON UNIQUEMENT):
       "title": "Titre précis de la session",
       "description": "Objectifs et ressources à utiliser",
       "type": "study" | "exercise" | "review" | "practice",
-      "exercises": [ // OBLIGATOIRE SI type="exercise" ou "practice"
-        {
-          "id": "ex1",
-          "title": "Nom de l'exercice",
-          "difficulty": "easy" | "medium" | "hard",
-          "instruction": "Consigne détaillée étape par étape",
-          "expectedOutput": "Résultat attendu (ex: accuracy > 90%)"
-        }
-      ]
+      "exercises": []
     }
   ],
   "tips": ["Conseil 1", "Conseil 2"],
   "summary": "Explication de la stratégie choisie"
 }
 
-IMPORTANT: Ne retourne QUE du JSON valide. Pas de markdown, pas de texte avant/après.
-Pour les sessions de type "exercise" ou "practice", tu DOIS générer 3 exercices (1 easy, 1 medium, 1 hard) basés sur le contenu des documents.`;
+IMPORTANT: 
+- Tu DOIS générer EXACTEMENT le nombre de sessions demandé dans les contraintes.
+- Ne retourne QUE du JSON valide. Pas de markdown, pas de texte avant/après.`;
 
 /**
  * Génère un programme de révision personnalisé et intelligent
@@ -136,15 +130,15 @@ AUJOURD'HUI: ${today.toISOString()}
 DISPONIBILITÉS (FREE SLOTS):
 ${slotsContext}
 
-CONTRAINTES STRICTES:
-- Nombre de sessions: ${targetSessionsCount}
+⚠️ CONTRAINTES OBLIGATOIRES (À RESPECTER STRICTEMENT):
+- Tu DOIS générer EXACTEMENT ${targetSessionsCount} sessions (ni plus, ni moins).
 - Durée par session: ${preferredDuration} min
 - Limite par jour: ${dailyLimit} heures
 - Inclure QCM final: ${includeQCM ? 'OUI (Dernière session)' : 'NON'}
 
 ${documentsContext || 'Aucun document spécifique fourni.'}
 
-Génère le planning JSON maintenant.`;
+Génère le planning JSON avec EXACTEMENT ${targetSessionsCount} sessions maintenant.`;
 
     try {
         const response = await model.invoke([
@@ -177,8 +171,15 @@ Génère le planning JSON maintenant.`;
             }
         }
 
+        // Fallback: Si le LLM n'a pas généré assez de sessions, on les complète
+        let sessions = parsed.sessions || [];
+        if (sessions.length < targetSessionsCount) {
+            console.warn(`[RevisionPlanner] LLM generated only ${sessions.length} sessions, expected ${targetSessionsCount}. Generating fallback sessions.`);
+            sessions = generateFallbackSessions(eventTitle, targetDate, targetSessionsCount, sessions, preferredDuration);
+        }
+
         // Fusionner les exercices du pack dans les sessions si type="exercise"
-        const sessions = parsed.sessions.map((s: any) => {
+        sessions = sessions.map((s: any) => {
             const session = {
                 ...s,
                 date: s.start.split('T')[0],
@@ -208,6 +209,56 @@ Génère le planning JSON maintenant.`;
         console.error('[RevisionPlanner] Error:', error);
         throw error;
     }
+}
+
+/**
+ * Génère des sessions de fallback si le LLM n'a pas généré assez de sessions
+ */
+function generateFallbackSessions(
+    eventTitle: string,
+    eventDate: Date,
+    targetCount: number,
+    existingSessions: any[],
+    durationMinutes: number
+): any[] {
+    const sessions = [...existingSessions];
+    const sessionTypes = ['study', 'exercise', 'practice', 'exercise', 'review'];
+    const sessionTitles = [
+        `${eventTitle}: Vue d'ensemble et Concepts Clés`,
+        `${eventTitle}: Exercices Pratiques - Niveau 1`,
+        `${eventTitle}: Approfondissement et Cas Complexes`,
+        `${eventTitle}: Exercices Avancés`,
+        `${eventTitle}: Révision Finale et Synthèse`
+    ];
+
+    // Calculer les jours disponibles
+    const today = new Date();
+    const daysUntilExam = Math.ceil((eventDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    const sessionsNeeded = targetCount - sessions.length;
+
+    // Répartir uniformément les sessions restantes
+    for (let i = 0; i < sessionsNeeded; i++) {
+        const sessionIndex = sessions.length + i;
+        const dayOffset = Math.floor((daysUntilExam - 1) * (sessionIndex + 1) / targetCount);
+
+        const sessionDate = new Date(today);
+        sessionDate.setDate(sessionDate.getDate() + Math.max(1, dayOffset));
+        sessionDate.setHours(18, 0, 0, 0); // Default to 18:00
+
+        const endDate = new Date(sessionDate);
+        endDate.setMinutes(endDate.getMinutes() + durationMinutes);
+
+        sessions.push({
+            start: sessionDate.toISOString().replace(/:\d{2}\.\d{3}Z$/, ':00'),
+            end: endDate.toISOString().replace(/:\d{2}\.\d{3}Z$/, ':00'),
+            title: sessionTitles[sessionIndex] || `${eventTitle}: Session ${sessionIndex + 1}`,
+            description: `Session de révision pour ${eventTitle}. Prioriser les concepts fondamentaux.`,
+            type: sessionTypes[sessionIndex] || 'study',
+            exercises: []
+        });
+    }
+
+    return sessions;
 }
 
 /**
