@@ -104,9 +104,9 @@ export function Calendar({ events, onEventClick, onDayClick }: CalendarProps) {
   };
 
   return (
-    <div className="bg-notion-bg rounded-lg shadow-sm border border-notion-border flex flex-col" style={{height: '100%', maxHeight: '100%', overflow: 'hidden'}}>
+    <div className="bg-notion-bg rounded-lg shadow-sm border border-notion-border flex flex-col" style={{ height: '100%', maxHeight: '100%', overflow: 'hidden' }}>
       {/* Header */}
-      <div className="px-6 py-4 border-b border-notion-border" style={{flexShrink: 0}}>
+      <div className="px-6 py-4 border-b border-notion-border" style={{ flexShrink: 0 }}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button
@@ -129,50 +129,49 @@ export function Calendar({ events, onEventClick, onDayClick }: CalendarProps) {
                 <ChevronRight className="w-5 h-5 text-notion-text" />
               </button>
             </div>
-            <h2 className="text-xl font-semibold text-notion-text capitalize">
+            <h2 className="text-base font-medium text-notion-text capitalize">
               {getTitle()}
             </h2>
           </div>
 
+          {/* Separator */}
+          <div className="h-6 w-px bg-notion-border mx-2" />
+
           {/* View mode selector */}
-          <div className="flex items-center gap-2 bg-notion-sidebar rounded-lg p-1">
+          <div className="flex items-center gap-1 bg-notion-sidebar rounded-lg p-1">
             <button
               onClick={() => setViewMode('month')}
-              className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${
-                viewMode === 'month'
-                  ? 'bg-notion-bg text-notion-text shadow-sm'
-                  : 'text-notion-textLight hover:text-notion-text'
-              }`}
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${viewMode === 'month'
+                ? 'bg-notion-bg text-notion-text shadow-sm'
+                : 'text-notion-textLight hover:text-notion-text'
+                }`}
             >
               Mois
             </button>
             <button
               onClick={() => setViewMode('week')}
-              className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${
-                viewMode === 'week'
-                  ? 'bg-notion-bg text-notion-text shadow-sm'
-                  : 'text-notion-textLight hover:text-notion-text'
-              }`}
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${viewMode === 'week'
+                ? 'bg-notion-bg text-notion-text shadow-sm'
+                : 'text-notion-textLight hover:text-notion-text'
+                }`}
             >
               Semaine
             </button>
             <button
               onClick={() => setViewMode('day')}
-              className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${
-                viewMode === 'day'
-                  ? 'bg-notion-bg text-notion-text shadow-sm'
-                  : 'text-notion-textLight hover:text-notion-text'
-              }`}
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${viewMode === 'day'
+                ? 'bg-notion-bg text-notion-text shadow-sm'
+                : 'text-notion-textLight hover:text-notion-text'
+                }`}
             >
               Jour
             </button>
             <button
               onClick={() => setViewMode('agenda')}
-              className={`px-4 py-2 text-sm font-medium rounded-md transition-all flex items-center gap-1.5 ${
-                viewMode === 'agenda'
-                  ? 'bg-notion-bg text-notion-text shadow-sm'
-                  : 'text-notion-textLight hover:text-notion-text'
-              }`}
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-all flex items-center gap-1.5 ${viewMode === 'agenda'
+                ? 'bg-notion-bg text-notion-text shadow-sm'
+                : 'text-notion-textLight hover:text-notion-text'
+                }`}
             >
               <List className="w-4 h-4" />
               Liste
@@ -182,13 +181,13 @@ export function Calendar({ events, onEventClick, onDayClick }: CalendarProps) {
       </div>
 
       {/* Calendar view with transitions */}
-      <div 
+      <div
         ref={viewContainerRef}
-        className={`relative transition-all duration-200 ease-out ${getTransitionClasses()}`} 
-        style={{flex: 1, minHeight: 0, maxHeight: '100%', overflow: 'hidden'}}
+        className={`relative transition-all duration-200 ease-out ${getTransitionClasses()}`}
+        style={{ flex: 1, minHeight: 0, maxHeight: '100%', overflow: 'hidden' }}
       >
         {viewMode === 'month' && (
-          <div style={{position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, overflow: 'hidden'}}>
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, overflow: 'hidden' }}>
             <MonthView
               currentDate={currentDate}
               events={events}
@@ -201,7 +200,7 @@ export function Calendar({ events, onEventClick, onDayClick }: CalendarProps) {
           </div>
         )}
         {viewMode === 'week' && (
-          <div style={{position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, overflow: 'hidden'}}>
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, overflow: 'hidden' }}>
             <WeekView
               currentDate={currentDate}
               events={events}
@@ -212,7 +211,7 @@ export function Calendar({ events, onEventClick, onDayClick }: CalendarProps) {
           </div>
         )}
         {viewMode === 'day' && (
-          <div style={{position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, overflow: 'hidden'}}>
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, overflow: 'hidden' }}>
             <DayView
               currentDate={currentDate}
               events={events}
@@ -222,7 +221,7 @@ export function Calendar({ events, onEventClick, onDayClick }: CalendarProps) {
           </div>
         )}
         {viewMode === 'agenda' && (
-          <div style={{position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, overflow: 'hidden'}}>
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, overflow: 'hidden' }}>
             <AgendaView
               currentDate={currentDate}
               events={events}

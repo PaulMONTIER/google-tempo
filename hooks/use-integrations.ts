@@ -146,6 +146,9 @@ export function useIntegrations() {
         eventTitle: string;
         eventDate: string;
         documents: DriveFileContent[];
+        sessionsCount?: number;
+        sessionDuration?: number;
+        includeQCM?: boolean;
     }) => {
         const targetEvent = overrides ? { title: overrides.eventTitle, date: overrides.eventDate } : state.targetEvent;
         const fileContents = overrides ? overrides.documents : state.fileContents;
@@ -165,6 +168,9 @@ export function useIntegrations() {
                     eventTitle: targetEvent.title,
                     eventDate: targetEvent.date,
                     documents: fileContents || [],
+                    sessionsCount: overrides?.sessionsCount,
+                    sessionDuration: overrides?.sessionDuration,
+                    includeQCM: overrides?.includeQCM,
                 }),
             });
 
