@@ -123,8 +123,8 @@ export function createGeminiModel(options?: GeminiModelOptions): ChatGoogleGener
   }
 
   return new ChatGoogleGenerativeAI({
-    // Gemini 2.0 Flash - compatible avec @langchain/google-genai 0.1.12
-    modelName: options?.modelName || "gemini-2.0-flash",
+    // Gemini 2.5 Flash - compatible avec @langchain/google-genai
+    modelName: options?.modelName || "gemini-2.5-flash",
     temperature: options?.temperature ?? 0,
     apiKey: apiKey,
     maxOutputTokens: options?.maxOutputTokens || 2048,
@@ -136,7 +136,7 @@ export function createGeminiModel(options?: GeminiModelOptions): ChatGoogleGener
  */
 export function createGeminiModelWithKey(apiKey: string, options?: GeminiModelOptions): ChatGoogleGenerativeAI {
   return new ChatGoogleGenerativeAI({
-    modelName: options?.modelName || "gemini-2.0-flash",
+    modelName: options?.modelName || "gemini-2.5-flash",
     temperature: options?.temperature ?? 0,
     apiKey: apiKey,
     maxOutputTokens: options?.maxOutputTokens || 2048,
