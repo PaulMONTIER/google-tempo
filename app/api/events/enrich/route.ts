@@ -32,11 +32,18 @@ export async function POST(request: NextRequest) {
         }
 
         // 2. Update Google Calendar event metadata
-        // We use extendedProperties.private to store our custom data
+        // Google Calendar extended properties have a 1024 char limit per value
+        // Store only essential fields for top 3 resources
+        const compactResources = resources.slice(0, 3).map(r => ({
+            t: r.title?.substring(0, 60) || '', // title (truncated)
+            u: r.url,
+            y: r.type // type: 'youtube' | 'web'
+        }));
+
         await updateCalendarEvent(session.user.id, eventId, {
             extendedProperties: {
                 private: {
-                    suggestedResources: JSON.stringify(resources)
+                    suggestedResources: JSON.stringify(compactResources)
                 }
             }
         });

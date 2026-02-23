@@ -7,11 +7,10 @@ import type { MessagesAnnotation } from "@langchain/langgraph";
  * @returns "tools" si des outils doivent être appelés, END sinon
  */
 export function shouldContinue(state: typeof MessagesAnnotation.State): "tools" | typeof END {
-  const messages = state.messages;
-  const lastMessage = messages[messages.length - 1];
+  const lastMessage = Array.isArray(state.messages) ? state.messages[state.messages.length - 1] as any : null;
 
-  // Si le LLM a décidé d'appeler un outil (il a généré un tool_call)
-  if (lastMessage.tool_calls?.length) {
+  // Si le message demande un appel d'outil, on va vers 'tools'
+  if (lastMessage?.tool_calls?.length) {
     return "tools";
   }
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { GitBranch } from '@/components/ui/icons';
+import { Network } from '@/components/ui/icons';
 
 interface EmptyStateProps {
   onRetry?: () => void;
@@ -11,14 +11,14 @@ interface EmptyStateProps {
  */
 export function EmptyState({ onRetry }: EmptyStateProps) {
   return (
-    <div className="text-center py-12 text-notion-textLight">
-      <GitBranch className="w-12 h-12 mx-auto mb-4 opacity-50" />
-      <p className="text-lg mb-2">Aucun arbre détecté</p>
+    <div className="text-center py-12 text-notion-textLight mt-10">
+      <Network className="w-12 h-12 mx-auto mb-4 opacity-50" />
+      <p className="text-lg mb-2 font-medium text-notion-text">Aucun arbre détecté</p>
       <p className="text-sm max-w-md mx-auto">
         Créez des événements de révision liés à un contrôle ou examen pour voir apparaître un arbre de préparation.
       </p>
-      <p className="text-xs mt-4 text-notion-textLight/70">
-        Exemple : "Place des révisions pour mon contrôle de math du 25"
+      <p className="text-xs mt-4 text-notion-textLight/70 italic">
+        Exemple : "Prévois des révisions pour mon contrôle d'Astro du 25"
       </p>
       {onRetry && (
         <button

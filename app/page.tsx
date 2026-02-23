@@ -18,6 +18,7 @@ import { ManualEventEditModal } from '@/components/events/ManualEventEditModal';
 import { useCalendarEvents } from '@/hooks/use-calendar-events';
 import { useChatMessages } from '@/hooks/use-chat-messages';
 import { usePanelState } from '@/hooks/use-panel-state';
+import { useNotifications } from '@/components/notifications/NotificationSystem';
 import { useSettings } from '@/components/providers/settings-provider';
 import { CalendarEvent } from '@/types';
 
@@ -68,6 +69,7 @@ export default function Home() {
 
   // Hooks pour gérer les données et états
   const { events, refreshEvents, createEvent } = useCalendarEvents(isAuthenticated);
+  const { addNotification } = useNotifications();
 
   // MVP Integrations Hook
   const integrations = useIntegrations();
@@ -102,12 +104,18 @@ export default function Home() {
     return () => clearInterval(interval);
   }, []);
 
-  // Report integration errors to chat
+  // Report integration errors via toast notifications (NOT chat)
   useEffect(() => {
     if (integrations.error) {
-      sendMessage(`⚠️ Une erreur est survenue : ${integrations.error}`);
+      addNotification({
+        title: 'Erreur d\'intégration',
+        message: integrations.error,
+        type: 'error',
+        duration: 5000,
+      });
+      integrations.clearError();
     }
-  }, [integrations.error, sendMessage]);
+  }, [integrations.error, integrations, addNotification]);
 
   // Handlers pour les interactions
   const handleEventClick = useCallback((event: CalendarEvent) => {
@@ -323,7 +331,7 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-notion-sidebar">
+    <div className="h-screen bg-notion-sidebar flex flex-col overflow-hidden">
       <AppHeader
         currentDate={currentDate}
         session={session}
@@ -338,7 +346,7 @@ export default function Home() {
         menuRef={panelState.menuRef}
       />
 
-      <div className="flex h-[calc(100vh-64px)]">
+      <div className="w-full flex-1 overflow-hidden">
         <MainLayout
           messages={messages}
           events={events}
@@ -351,6 +359,7 @@ export default function Home() {
           onConfirmEvent={confirmEvent}
           onModifyEvent={modifyEvent}
           onRejectEvent={rejectEvent}
+          onOpenArbre={() => panelState.setIsArbreOpen(true)}
           // MVP Props
           onSelectIntegration={integrations.handleIntegration}
           isIntegrationProcessing={integrations.isProcessing}

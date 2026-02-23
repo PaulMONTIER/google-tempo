@@ -109,3 +109,40 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
         );
     }
 }
+
+/**
+ * PATCH /api/trees/[treeId] - Met à jour l'arbre (titre)
+ */
+export async function PATCH(req: NextRequest, { params }: RouteParams) {
+    try {
+        const session = await getAppSession();
+        const validation = validateSession(session);
+        if (validation.error) return validation.error;
+
+        const { treeId } = await params;
+        const body = await req.json();
+        const { goalTitle, goalDate } = body;
+
+        const updateData: any = {};
+        if (goalTitle) updateData.goalTitle = goalTitle;
+        if (goalDate) updateData.goalDate = new Date(goalDate);
+
+        if (Object.keys(updateData).length === 0) {
+            return NextResponse.json(
+                { success: false, error: 'Aucune donnée à mettre à jour' },
+                { status: 400 }
+            );
+        }
+
+        await treeService.updateTree(treeId, updateData);
+
+        logger.info(`[API /trees/[treeId]] Tree updated: ${treeId}`);
+        return NextResponse.json({ success: true });
+    } catch (error: any) {
+        logger.error('[API /trees/[treeId]] PATCH error:', error);
+        return NextResponse.json(
+            { success: false, error: error.message },
+            { status: 500 }
+        );
+    }
+}

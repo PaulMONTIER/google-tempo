@@ -24,8 +24,10 @@ export function DocumentIngestionModal({
 
     if (!isOpen) return null;
 
-    const handleDriveSelect = (files: DriveFileContent[]) => {
-        setSelectedDocs((prev) => [...prev, ...files]);
+    const handleDriveSelect = (files: any[]) => {
+        // Map DriveFile to DriveFileContent
+        const filesWithContent: DriveFileContent[] = files.map(f => ({ ...f, content: '' }));
+        setSelectedDocs((prev) => [...prev, ...filesWithContent]);
         setIsDrivePickerOpen(false);
     };
 
@@ -73,7 +75,7 @@ export function DocumentIngestionModal({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-            <div className="bg-white dark:bg-notion-dark w-full max-w-2xl rounded-xl shadow-2xl border border-notion-border flex flex-col max-h-[90vh]">
+            <div className="bg-notion-bg w-full max-w-2xl rounded-xl shadow-2xl border border-notion-border flex flex-col max-h-[90vh]">
 
                 {/* Header */}
                 <div className="p-6 border-b border-notion-border flex items-center justify-between">
@@ -96,9 +98,9 @@ export function DocumentIngestionModal({
                         {/* Drive Button */}
                         <button
                             onClick={() => setIsDrivePickerOpen(true)}
-                            className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-notion-border rounded-xl hover:border-notion-blue hover:bg-notion-blue/5 transition-all group"
+                            className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-notion-border rounded-xl hover:border-notion-blue hover:bg-notion-blueLight transition-all group"
                         >
-                            <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                            <div className="w-12 h-12 bg-notion-blueLight text-notion-blue rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                                 <HardDrive className="w-6 h-6" />
                             </div>
                             <span className="font-medium text-notion-text">Google Drive</span>
@@ -106,8 +108,8 @@ export function DocumentIngestionModal({
                         </button>
 
                         {/* Local Upload Button */}
-                        <label className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-notion-border rounded-xl hover:border-notion-blue hover:bg-notion-blue/5 transition-all group cursor-pointer">
-                            <div className="w-12 h-12 bg-gray-100 text-gray-600 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                        <label className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-notion-border rounded-xl hover:border-notion-blue hover:bg-notion-blueLight transition-all group cursor-pointer">
+                            <div className="w-12 h-12 bg-notion-hover text-notion-textLight rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                                 <Upload className="w-6 h-6" />
                             </div>
                             <span className="font-medium text-notion-text">Fichiers locaux</span>
@@ -132,7 +134,7 @@ export function DocumentIngestionModal({
                                 {selectedDocs.map((doc) => (
                                     <div key={doc.id} className="flex items-center justify-between p-3 bg-notion-hover rounded-lg border border-notion-border">
                                         <div className="flex items-center gap-3 overflow-hidden">
-                                            <div className="p-2 bg-white dark:bg-gray-800 rounded-lg border border-notion-border">
+                                            <div className="p-2 bg-notion-bg rounded-lg border border-notion-border">
                                                 <FileText className="w-4 h-4 text-notion-blue" />
                                             </div>
                                             <div className="min-w-0">
@@ -142,7 +144,7 @@ export function DocumentIngestionModal({
                                         </div>
                                         <button
                                             onClick={() => handleRemoveDoc(doc.id)}
-                                            className="p-1.5 hover:bg-red-100 hover:text-red-600 rounded-md transition-colors text-notion-textLight"
+                                            className="p-1.5 hover:bg-notion-redLight hover:text-notion-red rounded-md transition-colors text-notion-textLight"
                                         >
                                             <X className="w-4 h-4" />
                                         </button>

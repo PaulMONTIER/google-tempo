@@ -142,7 +142,7 @@ export function useQuiz() {
         };
         setQuiz(quizData);
         // Trouver la première question non répondue
-        const firstUnanswered = quizData.questions.findIndex((q) => q.userAnswer === null);
+        const firstUnanswered = quizData.questions.findIndex((q: any) => q.userAnswer === null);
         setCurrentQuestionIndex(firstUnanswered >= 0 ? firstUnanswered : quizData.questions.length - 1);
         return quizData;
       } else {
@@ -196,12 +196,12 @@ export function useQuiz() {
               questions: prev.questions.map((q) =>
                 q.id === questionId
                   ? {
-                      ...q,
-                      userAnswer: answerIndex,
-                      isCorrect: data.data.isCorrect,
-                      explanation: data.data.explanation,
-                      answeredAt: new Date(),
-                    }
+                    ...q,
+                    userAnswer: answerIndex,
+                    isCorrect: data.data.isCorrect,
+                    explanation: data.data.explanation,
+                    answeredAt: new Date(),
+                  }
                   : q
               ),
             };

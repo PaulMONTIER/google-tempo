@@ -40,6 +40,10 @@ function getTools(): StructuredToolInterface[] {
       toolsModule.getEventsTool,
       toolsModule.deleteEventTool,
       toolsModule.createPreparationTreeTool,
+      // Nouveau: Outil de recherche personnelle (RAG)
+      toolsModule.searchPersonalKnowledgeTool,
+      // Nouveau: Outil de proactivité
+      toolsModule.optimizeScheduleTool,
       // Outils batch importés directement
       filterModule.filterEventsTool,
       batchModule.batchDeleteTool,

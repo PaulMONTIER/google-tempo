@@ -136,7 +136,7 @@ export function ChatInterface({
   return (
     <div className="flex flex-col bg-notion-bg rounded-lg shadow-sm border border-notion-border" style={{ height: '100%', maxHeight: '100%', overflow: 'hidden' }}>
       {/* Header */}
-      <div className="px-6 py-4 border-b border-notion-border" style={{ flexShrink: 0 }}>
+      <div className="p-3 lg:px-6 lg:py-4 border-b border-notion-border" style={{ flexShrink: 0 }}>
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-lg font-semibold text-notion-text">Tempo</h2>
@@ -167,7 +167,7 @@ export function ChatInterface({
       </div>
 
       {/* Messages */}
-      <div className="px-6 py-4 space-y-4" style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
+      <div className="p-3 lg:px-6 lg:py-4 space-y-4" style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
         {messages.length === 0 && (
           <div className="flex items-center justify-center h-full">
             <div className="text-center text-notion-textLight">
@@ -263,8 +263,8 @@ export function ChatInterface({
       </div>
 
       {/* Input */}
-      <form onSubmit={handleSubmit} className="px-6 py-4 border-t border-notion-border" style={{ flexShrink: 0 }}>
-        <div className="flex gap-3 items-center">
+      <form onSubmit={handleSubmit} className="p-3 lg:px-6 lg:py-4 border-t border-notion-border" style={{ flexShrink: 0 }}>
+        <div className="flex gap-2 lg:gap-3 items-center">
           {/* Bouton + Intégrations */}
           {onSelectIntegration && (
             <IntegrationMenu
@@ -289,7 +289,7 @@ export function ChatInterface({
                   : "Tapez votre message..."
             }
             disabled={isLoading || isConfirming || voiceSession.isActive}
-            className="flex-1 px-4 py-3 bg-notion-bg border border-notion-border rounded-lg focus:outline-none focus:ring-2 focus:ring-notion-blue focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 w-0 px-3 lg:px-4 py-2 lg:py-3 bg-notion-bg border border-notion-border rounded-lg text-sm lg:text-base focus:outline-none focus:ring-2 focus:ring-notion-blue focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
           />
 
           <VoiceButton
@@ -305,7 +305,7 @@ export function ChatInterface({
           <button
             type="submit"
             disabled={!input.trim() || isLoading || isConfirming || voiceSession.isActive}
-            className="px-6 py-3 bg-notion-blue text-white rounded-lg hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-notion-blue focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="p-2.5 lg:px-6 lg:py-3 bg-notion-blue text-white rounded-lg hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-notion-blue focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             {isLoading ? (
               <Loader2 className="w-5 h-5 animate-spin" />

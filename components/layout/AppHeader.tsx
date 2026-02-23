@@ -51,7 +51,7 @@ export function AppHeader({
               onClearChat={onClearChat}
             />
 
-            <h1 className="text-2xl font-bold text-notion-text tracking-tight">Tempo</h1>
+            <h1 className="text-xl md:text-2xl font-bold text-notion-text tracking-tight hidden sm:block">Tempo</h1>
 
             {/* Date actuelle - Simple */}
             <div className="hidden md:block text-sm text-notion-textLight border-l border-notion-border pl-6">

@@ -263,4 +263,26 @@ export const treeService = {
             await prisma.preparationBranch.delete({ where: { id: branch.id } });
         }
     },
+
+    /**
+     * Met à jour le titre d'un arbre
+     */
+    async updateTree(id: string, data: { goalTitle?: string; goalDate?: Date }): Promise<void> {
+        logger.debug(`[tree-service] Updating tree: ${id}`);
+        await prisma.preparationTree.update({
+            where: { id },
+            data,
+        });
+    },
+
+    /**
+     * Met à jour une branche
+     */
+    async updateBranch(id: string, data: { branchTitle?: string; branchDate?: Date }): Promise<void> {
+        logger.debug(`[tree-service] Updating branch: ${id}`);
+        await prisma.preparationBranch.update({
+            where: { id },
+            data,
+        });
+    },
 };

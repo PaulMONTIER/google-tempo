@@ -28,18 +28,9 @@ export async function POST(request: NextRequest) {
                 { status: 400 }
             );
         }
+        // La validation stricte de date dans le futur est retirée 
+        // pour permettre la flexibilité (ex: tester avec des dates passées).
 
-        // Vérifier que la date est dans le futur
-        const targetDate = new Date(eventDate);
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        if (targetDate <= today) {
-            return NextResponse.json(
-                { error: 'La date de l\'événement doit être dans le futur' },
-                { status: 400 }
-            );
-        }
 
         console.log(`[Revision Generate] Creating plan for "${eventTitle}" on ${eventDate}`);
         console.log(`[Revision Generate] Config received: sessionsCount=${sessionsCount}, sessionDuration=${sessionDuration}, includeQCM=${includeQCM}`);

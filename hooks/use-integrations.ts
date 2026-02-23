@@ -117,6 +117,19 @@ export function useIntegrations() {
                         ...prev,
                         fileContents: data.files,
                     }));
+
+                    // Trigger RAG Ingestion in the background
+                    try {
+                        fetch('/api/rag/ingest', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ files: data.files })
+                        }).then(res => res.json())
+                            .then(ingestData => console.log('[RAG] Background ingestion info:', ingestData))
+                            .catch(err => console.error('[RAG] Background ingestion error:', err));
+                    } catch (ingestError) {
+                        console.error('[RAG] Failed to start background ingestion:', ingestError);
+                    }
                 }
             } catch (error) {
                 console.error('Error fetching file contents:', error);
@@ -218,6 +231,11 @@ export function useIntegrations() {
         setState(initialState);
     }, []);
 
+    // Clear error state
+    const clearError = useCallback(() => {
+        setState((prev) => ({ ...prev, error: null }));
+    }, []);
+
     return {
         ...state,
 
@@ -231,6 +249,7 @@ export function useIntegrations() {
         generateRevisionPlan,
         clearDeadlines,
         clearRevisionPlan,
+        clearError,
         reset,
 
         // Computed

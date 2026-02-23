@@ -149,11 +149,17 @@ export function EventDetailsPanel({ event, onClose, allEvents = [], onEdit, onGe
                     let resources = enrichedResources;
                     if (!resources && event.extendedProps?.suggestedResources) {
                       try {
-                        resources = typeof event.extendedProps.suggestedResources === 'string'
-                          ? JSON.parse(event.extendedProps.suggestedResources)
-                          : event.extendedProps.suggestedResources;
+                        const raw = event.extendedProps.suggestedResources;
+                        const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+                        // Handle compact format (t, u, y) or full format (title, url, type)
+                        resources = parsed.map((r: any) => ({
+                          title: r.title || r.t || '',
+                          url: r.url || r.u || '',
+                          type: r.type || r.y || 'web'
+                        }));
                       } catch (e) {
                         console.error('Error parsing suggestedResources:', e);
+                        resources = [];
                       }
                     }
 
@@ -177,7 +183,7 @@ export function EventDetailsPanel({ event, onClose, allEvents = [], onEdit, onGe
                             {res.title}
                           </p>
                           <p className="text-xs text-gray-500 truncate">
-                            {res.metadata?.author || res.metadata?.domain || 'Ressource externe'}
+                            {res.type === 'youtube' ? 'YouTube' : 'Ressource externe'}
                           </p>
                         </div>
                         <ExternalLink className="w-4 h-4 text-gray-600 group-hover:text-gray-400" />

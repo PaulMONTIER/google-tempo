@@ -42,7 +42,7 @@ export interface AIResponse {
   error?: string;
 }
 
-export type ViewMode = 'month' | 'week' | 'day';
+export type ViewMode = 'month' | 'week' | 'day' | 'agenda' | 'arbre';
 
 export interface ConflictInfo {
   hasConflict: boolean;
