@@ -2,23 +2,30 @@
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import { X, User, Bell, Palette, Calendar, Mic } from '@/components/ui/icons';
+import { X, User, Bell, Palette, Calendar, Mic, Database, Plug } from '@/components/ui/icons';
 import { useSettings, UserSettings } from '@/components/providers/settings-provider';
-import { AccountTab, NotificationsTab, AppearanceTab, CalendarTab, VoiceTab } from './tabs';
+import { AccountTab, NotificationsTab, AppearanceTab, CalendarTab, VoiceTab, DemoTab, ConnectorTab } from './tabs';
 import { Z_INDEX, DURATIONS } from '@/lib/constants/ui-constants';
 
 interface SettingsPanelProps {
   isOpen: boolean;
   onClose: () => void;
+  initialTab?: SettingsTab;
 }
 
-type SettingsTab = 'account' | 'notifications' | 'appearance' | 'calendar' | 'voice';
+type SettingsTab = 'account' | 'notifications' | 'appearance' | 'calendar' | 'voice' | 'demo' | 'connectors';
 
-export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
+export function SettingsPanel({ isOpen, onClose, initialTab = 'account' }: SettingsPanelProps) {
   const { data: session } = useSession();
   const { settings, updateSetting } = useSettings();
-  const [activeTab, setActiveTab] = useState<SettingsTab>('account');
+  const [activeTab, setActiveTab] = useState<SettingsTab>(initialTab);
   const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setActiveTab(initialTab);
+    }
+  }, [isOpen, initialTab]);
   const [isSaved, setIsSaved] = useState(false);
 
   // User info from session
@@ -55,6 +62,8 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
     { id: 'appearance' as SettingsTab, label: 'Apparence', icon: Palette },
     { id: 'calendar' as SettingsTab, label: 'Calendrier', icon: Calendar },
     { id: 'voice' as SettingsTab, label: 'Assistant vocal', icon: Mic },
+    { id: 'connectors' as SettingsTab, label: 'Connecteurs', icon: Plug },
+    { id: 'demo' as SettingsTab, label: 'Mode Démo', icon: Database },
   ];
 
   return (
@@ -127,6 +136,8 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
               {activeTab === 'appearance' && <AppearanceTab settings={settings} updateSetting={handleUpdateSetting} />}
               {activeTab === 'calendar' && <CalendarTab settings={settings} updateSetting={handleUpdateSetting} />}
               {activeTab === 'voice' && <VoiceTab settings={settings} updateSetting={handleUpdateSetting} />}
+              {activeTab === 'connectors' && <ConnectorTab />}
+              {activeTab === 'demo' && <DemoTab />}
             </div>
           </div>
         </div>

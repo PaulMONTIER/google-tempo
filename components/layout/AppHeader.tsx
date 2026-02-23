@@ -9,6 +9,7 @@ interface AppHeaderProps {
   session: Session | null;
   onOpenSettings: () => void;
   onOpenRules: () => void;
+  onOpenConnectors: () => void;
   onOpenArbre: () => void;
   onOpenProgression: () => void;
   onClearChat: () => void;
@@ -26,6 +27,7 @@ export function AppHeader({
   session,
   onOpenSettings,
   onOpenRules,
+  onOpenConnectors,
   onOpenArbre,
   onOpenProgression,
   onClearChat,
@@ -46,6 +48,7 @@ export function AppHeader({
               menuRef={menuRef}
               onOpenSettings={onOpenSettings}
               onOpenRules={onOpenRules}
+              onOpenConnectors={onOpenConnectors}
               onOpenArbre={onOpenArbre}
               onOpenProgression={onOpenProgression}
               onClearChat={onClearChat}

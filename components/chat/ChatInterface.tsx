@@ -11,6 +11,7 @@ import { RevisionProposalCard } from './RevisionProposalCard';
 import { RevisionPlanCard } from './RevisionPlanCard';
 import { GmailDeadlineCard } from './GmailDeadlineCard';
 import { RevisionConfigurationModal, RevisionConfiguration } from './RevisionConfigurationModal';
+import { ProactiveDemoCard } from './ProactiveDemoCard';
 import { useVoiceAssistant } from '@/hooks/use-voice-assistant';
 import { useSettings } from '@/components/providers/settings-provider';
 import { RevisionPlan, RevisionSession, DetectedDeadline } from '@/types/integrations';
@@ -169,10 +170,10 @@ export function ChatInterface({
       {/* Messages */}
       <div className="p-3 lg:px-6 lg:py-4 space-y-4" style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
         {messages.length === 0 && (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center text-notion-textLight">
-              <p className="text-lg mb-2">Bonjour ! Je suis Tempo</p>
-              <p className="text-sm">Comment puis-je vous aider avec votre calendrier aujourd&apos;hui ?</p>
+          <div className="flex flex-col items-center justify-start h-full pb-8">
+            <ProactiveDemoCard />
+            <div className="text-center text-notion-textLight mt-8">
+              <p className="text-sm">Pose-moi une question ou demande-moi de t'ajouter un événement.</p>
             </div>
           </div>
         )}

@@ -15,8 +15,11 @@ interface ArbrePanelProps {
 /**
  * Composant principal pour afficher les arbres de préparation
  */
+type FilterType = 'Tout' | 'Cours' | 'Connecteur';
+
 export function ArbrePanel({ isOpen, onClose }: ArbrePanelProps) {
   const [isVisible, setIsVisible] = useState(false);
+  const [filter, setFilter] = useState<FilterType>('Tout');
   const { trees, isLoading, error, refetch } = useTreeData({ isOpen });
 
   useEffect(() => {
@@ -33,6 +36,18 @@ export function ArbrePanel({ isOpen, onClose }: ArbrePanelProps) {
     setIsVisible(false);
     setTimeout(onClose, DURATIONS.animation);
   };
+
+  const filteredTrees = trees.filter(tree => {
+    if (filter === 'Tout') return true;
+
+    // Les Connecteurs sont ceux qui ont MOCK ou Strava MOCK
+    const isConnecteur = tree.goalTitle.includes('(MOCK)') || tree.goalTitle.includes('(Strava MOCK)');
+
+    if (filter === 'Connecteur') return isConnecteur;
+    if (filter === 'Cours') return !isConnecteur;
+
+    return true;
+  });
 
   return (
     <>
@@ -66,12 +81,30 @@ export function ArbrePanel({ isOpen, onClose }: ArbrePanelProps) {
                 </p>
               </div>
             </div>
-            <button
-              onClick={handleClose}
-              className="p-2 hover:bg-notion-hover rounded-lg transition-colors"
-            >
-              <X className="w-5 h-5 text-notion-textLight" />
-            </button>
+            <div className="flex items-center gap-4">
+              {/* Filtres */}
+              <div className="flex bg-notion-sidebar/50 p-1 rounded-lg border border-notion-border">
+                {(['Tout', 'Cours', 'Connecteur'] as FilterType[]).map((f) => (
+                  <button
+                    key={f}
+                    onClick={() => setFilter(f)}
+                    className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${filter === f
+                        ? 'bg-notion-bg text-notion-text shadow-sm border border-notion-border/50'
+                        : 'text-notion-textLight hover:text-notion-text hover:bg-notion-hover/50'
+                      }`}
+                  >
+                    {f}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                onClick={handleClose}
+                className="p-2 hover:bg-notion-hover rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-notion-textLight" />
+              </button>
+            </div>
           </div>
 
           {/* Content */}
@@ -91,11 +124,11 @@ export function ArbrePanel({ isOpen, onClose }: ArbrePanelProps) {
                   Réessayer
                 </button>
               </div>
-            ) : trees.length === 0 ? (
+            ) : filteredTrees.length === 0 ? (
               <EmptyState onRetry={refetch} />
             ) : (
               <div className="space-y-6">
-                {trees.map((tree) => (
+                {filteredTrees.map((tree) => (
                   <TreeItem key={tree.id} tree={tree} />
                 ))}
               </div>

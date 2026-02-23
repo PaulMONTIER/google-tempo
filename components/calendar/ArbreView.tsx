@@ -1,20 +1,41 @@
 'use client';
 
-import { Loader2, Network } from '@/components/ui/icons';
+import { useState } from 'react';
+import { Loader2, Network, Filter } from '@/components/ui/icons';
 import { useTreeData } from '@/hooks/use-tree-data';
 import { TreeItem } from '../arbre/TreeItem';
 import { EmptyState } from '../arbre/EmptyState';
+
+type TypeFilter = 'Tout' | 'Cours' | 'Connecteur';
+type StatusFilter = 'En cours & À venir' | 'Tous';
 
 /**
  * Vue principale pour afficher les arbres de préparation dans le calendrier
  */
 export function ArbreView() {
   const { trees, isLoading, error, refetch } = useTreeData({ isOpen: true });
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>('Tout');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('En cours & À venir');
+
+  const filteredTrees = trees.filter(tree => {
+    // 1. Filtrer par type
+    const isConnecteur = tree.goalTitle.includes('(Strava MOCK)');
+    if (typeFilter === 'Connecteur' && !isConnecteur) return false;
+    if (typeFilter === 'Cours' && isConnecteur) return false;
+
+    // 2. Filtrer par statut
+    if (statusFilter === 'En cours & À venir') {
+      const isPast = new Date(tree.goalDate) < new Date(new Date().setHours(0, 0, 0, 0));
+      if (isPast) return false;
+    }
+
+    return true;
+  });
 
   return (
     <div className="h-full w-full bg-notion-bg flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="px-6 py-4 flex items-center justify-between flex-shrink-0">
+      <div className="px-6 py-4 flex items-center justify-between flex-shrink-0 border-b border-notion-border/50">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-notion-green/15 rounded-lg flex items-center justify-center">
             <Network className="w-5 h-5 text-notion-green" />
@@ -25,6 +46,49 @@ export function ArbreView() {
               Visualisez vos parcours vers vos objectifs structurés
             </p>
           </div>
+        </div>
+
+        {/* Filtres à droite */}
+        <div className="flex flex-col items-end gap-2">
+
+          {/* Statut Filter */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-medium text-notion-textLight uppercase tracking-wider">Statut</span>
+            <div className="flex bg-notion-sidebar/50 p-1 rounded-lg border border-notion-border">
+              {(['Tous', 'En cours & À venir'] as StatusFilter[]).map((f) => (
+                <button
+                  key={f}
+                  onClick={() => setStatusFilter(f)}
+                  className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${statusFilter === f
+                      ? 'bg-notion-bg text-notion-text shadow-sm border border-notion-border/50'
+                      : 'text-notion-textLight hover:text-notion-text hover:bg-notion-hover/50'
+                    }`}
+                >
+                  {f}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Type Filter */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-medium text-notion-textLight uppercase tracking-wider"><Filter className="w-3 h-3 inline mr-1" />Type</span>
+            <div className="flex bg-notion-sidebar/50 p-1 rounded-lg border border-notion-border">
+              {(['Tout', 'Cours', 'Connecteur'] as TypeFilter[]).map((f) => (
+                <button
+                  key={f}
+                  onClick={() => setTypeFilter(f)}
+                  className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${typeFilter === f
+                      ? 'bg-notion-bg text-notion-text shadow-sm border border-notion-border/50'
+                      : 'text-notion-textLight hover:text-notion-text hover:bg-notion-hover/50'
+                    }`}
+                >
+                  {f}
+                </button>
+              ))}
+            </div>
+          </div>
+
         </div>
       </div>
 
@@ -45,11 +109,11 @@ export function ArbreView() {
               Réessayer
             </button>
           </div>
-        ) : trees.length === 0 ? (
+        ) : filteredTrees.length === 0 ? (
           <EmptyState onRetry={refetch} />
         ) : (
           <div className="space-y-6 max-w-4xl mx-auto">
-            {trees.map((tree) => (
+            {filteredTrees.map((tree) => (
               <TreeItem key={tree.id} tree={tree} onUpdate={refetch} />
             ))}
           </div>

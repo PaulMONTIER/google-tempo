@@ -335,8 +335,9 @@ export default function Home() {
       <AppHeader
         currentDate={currentDate}
         session={session}
-        onOpenSettings={() => panelState.setIsSettingsOpen(true)}
+        onOpenSettings={() => { panelState.setSettingsTab('account'); panelState.setIsSettingsOpen(true); }}
         onOpenRules={() => panelState.setIsRulesOpen(true)}
+        onOpenConnectors={() => { panelState.setSettingsTab('connectors'); panelState.setIsSettingsOpen(true); }}
         onOpenArbre={() => panelState.setIsArbreOpen(true)}
         onOpenProgression={() => panelState.setIsProgressionOpen(true)}
         onClearChat={clearMessages}
@@ -382,7 +383,7 @@ export default function Home() {
       </div>
 
       {/* Panels */}
-      <SettingsPanel isOpen={panelState.isSettingsOpen} onClose={() => panelState.setIsSettingsOpen(false)} />
+      <SettingsPanel isOpen={panelState.isSettingsOpen} onClose={() => panelState.setIsSettingsOpen(false)} initialTab={panelState.settingsTab} />
       <RulesPanel isOpen={panelState.isRulesOpen} onClose={() => panelState.setIsRulesOpen(false)} />
       <ArbrePanel isOpen={panelState.isArbreOpen} onClose={() => panelState.setIsArbreOpen(false)} />
       <ProgressionPanel isOpen={panelState.isProgressionOpen} onClose={() => panelState.setIsProgressionOpen(false)} />

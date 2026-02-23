@@ -22,7 +22,43 @@ export async function GET() {
       endDate,
     });
 
-    return NextResponse.json({ events });
+    // -------------------------------------------------------------
+    // INTEGRATION DU MODE DÉMO (MOCK DATA)
+    // -------------------------------------------------------------
+    const { prisma } = await import('@/lib/prisma');
+    const mockTrees = await prisma.preparationTree.findMany({
+      where: { userId: session.user.id, goalTitle: { contains: '(MOCK)' } },
+      include: { branches: true }
+    });
+
+    // Inject mock events from the database into the calendar view
+    const mockEvents: any[] = [];
+    mockTrees.forEach(tree => {
+      // Goal event
+      mockEvents.push({
+        id: tree.goalEventId,
+        title: tree.goalTitle,
+        startDate: tree.goalDate,
+        endDate: new Date(tree.goalDate.getTime() + 2 * 60 * 60 * 1000), // + 2 hours
+        color: '#f59e0b', // amber for goal
+        eventType: 'main'
+      });
+
+      // Branch events
+      tree.branches.forEach(branch => {
+        mockEvents.push({
+          id: branch.branchEventId,
+          title: branch.branchTitle,
+          startDate: branch.branchDate,
+          endDate: new Date(branch.branchDate.getTime() + 60 * 60 * 1000), // + 1 hour
+          color: '#3b82f6', // blue for branch
+          eventType: 'preparation',
+          parentEventId: tree.goalEventId
+        });
+      });
+    });
+
+    return NextResponse.json({ events: [...events, ...mockEvents] });
   } catch (error: unknown) {
     return handleApiError(error, "calendar/events");
   }

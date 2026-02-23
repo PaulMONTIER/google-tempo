@@ -6,6 +6,7 @@ import { useState, useRef, useEffect } from 'react';
  */
 export function usePanelState() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [settingsTab, setSettingsTab] = useState<any>('account');
   const [isNotificationPanelOpen, setIsNotificationPanelOpen] = useState(false);
   const [isRulesOpen, setIsRulesOpen] = useState(false);
   const [isArbreOpen, setIsArbreOpen] = useState(false);
@@ -28,6 +29,8 @@ export function usePanelState() {
     // Settings panel
     isSettingsOpen,
     setIsSettingsOpen,
+    settingsTab,
+    setSettingsTab,
 
     // Notification panel
     isNotificationPanelOpen,

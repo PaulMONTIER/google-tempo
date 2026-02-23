@@ -33,68 +33,80 @@ function getColorForIndex(index: number): string {
  */
 export async function getUserSkillsFromProfile(userId: string): Promise<UserSkillData[]> {
     try {
-        // 1. Récupérer les préférences de l'utilisateur (matières choisies)
-        const preferences = await prisma.userPreferences.findUnique({
+        // 1. Récupérer TOUTE la progression de l'utilisateur
+        const progressList = await prisma.userSkillProgress.findMany({
             where: { userId },
+            include: {
+                skillFamily: true,
+                skillDetail: true
+            }
         });
 
-        if (!preferences || !preferences.studySubjects || preferences.studySubjects.length === 0) {
-            logger.debug(`[skill-service] Aucune matière dans le profil pour userId: ${userId}`);
-            return [];
-        }
-
-        const subjects = preferences.studySubjects;
-        const skillsData: UserSkillData[] = [];
-
-        // 2. Pour chaque matière, créer ou récupérer la compétence correspondante
-        for (let i = 0; i < subjects.length; i++) {
-            const subjectName = subjects[i];
-
-            // Chercher ou créer la famille de compétences pour cette matière
-            let skillFamily = await prisma.skillFamily.findFirst({
-                where: {
-                    name: subjectName,
-                    // Compétence spécifique à cet utilisateur via une convention de nommage
-                },
+        if (progressList.length === 0) {
+            // S'il n'y a rien, on fallback sur les préférences comme avant
+            const preferences = await prisma.userPreferences.findUnique({
+                where: { userId },
             });
 
-            // Si pas de famille, on en crée une dynamiquement
-            if (!skillFamily) {
-                skillFamily = await prisma.skillFamily.create({
-                    data: {
-                        name: subjectName,
-                        color: getColorForIndex(i),
-                        icon: 'BookOpen',
-                        order: i,
-                        keywords: JSON.stringify([subjectName.toLowerCase()]),
-                        isActive: true,
-                        autoDetect: true,
-                    },
-                });
-                logger.debug(`[skill-service] Créé SkillFamily pour "${subjectName}"`);
+            if (!preferences || !preferences.studySubjects || preferences.studySubjects.length === 0) {
+                logger.debug(`[skill-service] Aucune matière ou progression pour userId: ${userId}`);
+                return [];
             }
 
-            // Récupérer la progression de l'utilisateur pour cette compétence
-            const progress = await prisma.userSkillProgress.findFirst({
-                where: {
-                    userId,
-                    skillFamilyId: skillFamily.id,
-                    skillDetailId: null,
-                },
-            });
+            const subjects = preferences.studySubjects;
+            const skillsData: UserSkillData[] = [];
 
-            skillsData.push({
-                id: skillFamily.id,
-                name: subjectName,
-                level: progress?.level || 0,
-                xp: progress?.xp || 0,
-                color: skillFamily.color,
-            });
+            // Créer les familles pour les matières
+            for (let i = 0; i < subjects.length; i++) {
+                const subjectName = subjects[i];
+                let skillFamily = await prisma.skillFamily.findFirst({
+                    where: { name: subjectName },
+                });
+
+                if (!skillFamily) {
+                    skillFamily = await prisma.skillFamily.create({
+                        data: {
+                            name: subjectName,
+                            color: getColorForIndex(i),
+                            icon: 'BookOpen',
+                            order: i,
+                            keywords: JSON.stringify([subjectName.toLowerCase()]),
+                            isActive: true,
+                            autoDetect: true,
+                        },
+                    });
+                }
+
+                skillsData.push({
+                    id: skillFamily.id,
+                    name: subjectName,
+                    level: 0,
+                    xp: 0,
+                    color: skillFamily.color,
+                });
+            }
+            return skillsData;
         }
 
-        logger.debug(`[skill-service] ${skillsData.length} compétences récupérées depuis le profil pour userId: ${userId}`);
+        // S'il y a de la progression, on la formate
+        const skillsData: UserSkillData[] = progressList.map(p => {
+            const isDetail = !!p.skillDetail;
+            return {
+                id: isDetail ? p.skillDetail!.id : p.skillFamily.id,
+                name: isDetail ? p.skillDetail!.name : p.skillFamily.name,
+                level: p.level,
+                xp: p.xp,
+                // Si pas de couleur spécifique, prendre celle de la famille
+                color: p.skillFamily.color || getColorForIndex(0),
+            };
+        });
 
-        return skillsData;
+        // Retirer les doublons si besoin (ex: famille + détail avec même nom) et trier
+        const uniqueSkills = Array.from(new Map(skillsData.map(item => [item.name, item])).values());
+
+        logger.debug(`[skill-service] ${uniqueSkills.length} compétences récupérées dynamiquement pour userId: ${userId}`);
+        return uniqueSkills.sort((a, b) => b.level - a.level);
+
     } catch (error) {
         logger.error('[skill-service] Erreur getUserSkillsFromProfile:', error);
         return [];
